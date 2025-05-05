@@ -24,7 +24,7 @@ export default function RootLayout({
         <ErrorBoundary>
           <AnimationProvider>
             <Navbar />
-            <main className="pt-[100px]">{children}</main>
+            <main className="pt-[80px] md:pt-[90px]">{children}</main>
             <Footer />
           </AnimationProvider>
         </ErrorBoundary>

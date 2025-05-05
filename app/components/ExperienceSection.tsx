@@ -153,11 +153,13 @@ export default function ExperienceSection() {
                 </div>
               ) : (
                 <div className="relative w-full h-full">
-                  <img
+                  <Image
                     src={crane.image}
                     alt={crane.title}
-                    className="object-cover w-full h-full"
+                    fill
+                    className="object-cover"
                     onError={() => handleImageError(`crane-${crane.id}`)}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
                 </div>
               )}
@@ -179,14 +181,16 @@ export default function ExperienceSection() {
                   <span className="text-gray-700 font-medium">{client.name}</span>
                 </div>
               ) : (
-                <img
-                  src={client.image}
-                  alt={client.name}
-                  width={120}
-                  height={48}
-                  className="object-contain h-full mx-auto grayscale hover:grayscale-0 transition-all duration-300"
-                  onError={() => handleImageError(`client-${client.id}`)}
-                />
+                <div className="relative w-full h-full">
+                  <Image
+                    src={client.image}
+                    alt={client.name}
+                    fill
+                    className="object-contain mx-auto grayscale hover:grayscale-0 transition-all duration-300"
+                    onError={() => handleImageError(`client-${client.id}`)}
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
+                  />
+                </div>
               )}
             </div>
           ))}
