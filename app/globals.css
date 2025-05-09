@@ -1,26 +1,550 @@
 @import "tailwindcss";
 
+/* Define color palette using CSS custom properties */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-background: #FFFFFF; /* White */
+  --color-text-base: #000000; /* Black */
+  --color-text-muted: #333333; /* Darker Gray for less emphasis */
+  --color-primary-yellow: #FFC107; /* Yellow */
+  --color-primary-orange: #FF9800; /* Orange */
+  --color-accent-light-gray: #F5F5F5; /* Light gray for subtle backgrounds or borders */
+  --color-border: #E0E0E0; /* Border color */
+  --color-shadow: rgba(0, 0, 0, 0.1);
+  --color-shadow-dark: rgba(0, 0, 0, 0.2);
+
+  /* Font variables */
+  --font-primary: var(--font-montserrat), 'Montserrat', sans-serif;
+  --font-heading: var(--font-playfair), 'Playfair Display', serif;
+  
+  /* Swiper variables */
+  --swiper-theme-color: #FFC107;
+  --swiper-navigation-size: 24px;
+
+  /* Animation variables */
+  --transition-slow: 0.5s;
+  --transition-medium: 0.3s;
+  --transition-fast: 0.2s;
+  --bounce-effect: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --smooth-effect: cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Apply base styles to the body */
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-base);
+  font-family: var(--font-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Tailwind base, components, and utilities */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom base styles */
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold text-black; /* Black for headings by default */
+    font-family: var(--font-heading);
+    letter-spacing: -0.025em; /* Slightly tighter letter spacing for headings */
+  }
+
+  h1 {
+    @apply text-4xl sm:text-5xl;
+  }
+
+  h2 {
+    @apply text-3xl sm:text-4xl;
+    line-height: 1.3;
+  }
+
+  h3 {
+    @apply text-2xl sm:text-3xl;
+  }
+
+  p {
+    @apply mb-4 text-gray-800; /* Slightly softer black for paragraphs */
+  }
+
+  a {
+    @apply text-orange-500 hover:text-orange-600 transition-colors duration-300;
+  }
+
+  /* Animated underline for links */
+  .animated-link {
+    position: relative;
+    display: inline-block;
+    text-decoration: none;
+  }
+
+  .animated-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background-color: var(--color-primary-yellow);
+    transition: width 0.3s var(--smooth-effect);
+  }
+
+  .animated-link:hover::after {
+    width: 100%;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom component styles */
+@layer components {
+  .btn {
+    @apply px-6 py-3 font-semibold rounded-lg shadow-md transition-all duration-300 ease-in-out;
+    font-family: var(--font-primary); /* Ensure buttons use primary font like navbar */
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background-color: rgba(255,255,255,0.2);
+    transition: width 0.3s var(--smooth-effect);
+    z-index: -1;
+  }
+
+  .btn:hover::before {
+    width: 100%;
+  }
+
+  .btn-primary {
+    @apply bg-orange-500 text-white hover:bg-orange-600 focus:ring-4 focus:ring-orange-300;
+    box-shadow: 0 4px 14px rgba(255, 152, 0, 0.3);
+  }
+  
+  .btn-secondary {
+    @apply bg-yellow-400 text-black hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-200;
+    box-shadow: 0 4px 14px rgba(255, 193, 7, 0.3);
+  }
+
+  .card {
+    @apply bg-white/95 rounded-lg shadow-lg overflow-hidden p-6 transition-all duration-300 ease-in-out;
+    border: 2px solid transparent; /* Start with a transparent border */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), 0 1px 8px rgba(0, 0, 0, 0.06);
+    transform: translateY(0);
+    transition: transform 0.5s var(--bounce-effect), box-shadow 0.5s var(--smooth-effect), border-color 0.3s ease;
+  }
+
+  .card:hover {
+    @apply shadow-xl;
+    border-color: var(--color-primary-yellow); /* Yellow border on hover */
+    transform: translateY(-10px); /* More pronounced lift effect */
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  .card-title {
+    @apply text-xl font-bold mb-3;
+    font-family: var(--font-heading); /* Heading font for card titles */
+    color: var(--color-text-base); /* Black title */
+    position: relative;
+    display: inline-block;
+  }
+  
+  .card-title::after {
+    content: '';
+    position: absolute;
+    width: 30%;
+    height: 3px;
+    bottom: -6px;
+    left: 0;
+    background-color: var(--color-primary-yellow);
+    transition: width 0.3s var(--smooth-effect);
+  }
+  
+  .card:hover .card-title::after {
+    width: 60%;
+  }
+
+  .card-content p {
+    @apply text-sm text-gray-700 mb-4;
+    font-family: var(--font-primary);
+  }
+
+  .card .btn {
+    @apply rounded-sm; /* Match top bar button rounding */
+  }
+  
+  /* Navigation specific styles */
+  .nav-shadow {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  .nav-container {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  /* Section styles */
+  .section-heading {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 10px;
+  }
+
+  .section-heading::after {
+    content: '';
+    position: absolute;
+    width: 60px;
+    height: 4px;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--color-primary-yellow);
+    border-radius: 2px;
+  }
+
+  /* Modern Swiper custom styles */
+  .swiper {
+    padding-bottom: 50px;
+    overflow: visible;
+  }
+
+  .swiper-slide {
+    height: auto; /* Allow slides to determine their own height */
+    opacity: 0.8;
+    transform: scale(0.95);
+    transition: all 0.5s var(--smooth-effect);
+  }
+
+  .swiper-slide-active {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .swiper-button-prev,
+  .swiper-button-next {
+    @apply bg-white/30 backdrop-blur-sm rounded-full w-12 h-12 shadow-md text-yellow-500;
+    transition: all 0.4s var(--bounce-effect);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transform: scale(1);
+  }
+
+  .swiper-button-prev:hover,
+  .swiper-button-next:hover {
+    @apply bg-white/60 text-yellow-600;
+    transform: scale(1.1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+  }
+
+  .swiper-button-prev:after,
+  .swiper-button-next:after {
+    font-size: 1rem;
+    font-weight: bold;
+  }
+
+  .swiper-pagination {
+    bottom: 20px !important;
+  }
+
+  .swiper-pagination-bullet {
+    @apply bg-white/70 opacity-60;
+    width: 10px;
+    height: 10px;
+    transition: all 0.3s var(--smooth-effect);
+  }
+
+  .swiper-pagination-bullet-active {
+    @apply bg-yellow-500 opacity-100;
+    width: 14px;
+    height: 14px;
+    transform: scale(1.2);
+  }
+  
+  /* Card label styles for slider */
+  .crane-label {
+    @apply bg-yellow-500 text-black px-4 py-2 rounded-md font-bold text-sm transition-all;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transform: translateY(0);
+    transition: transform 0.3s var(--bounce-effect);
+  }
+  
+  .card:hover .crane-label {
+    transform: translateY(-3px);
+  }
+  
+  /* 3D Flip Card Styles */
+  .flip-card-container {
+    perspective: 1000px;
+    width: 100%;
+    height: 350px;
+  }
+  
+  .flip-card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-style: preserve-3d;
+  }
+  
+  .flip-card-container:hover .flip-card {
+    transform: rotateY(180deg);
+  }
+  
+  .flip-card-front,
+  .flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+  }
+  
+  .flip-card-container:hover .flip-card-front,
+  .flip-card-container:hover .flip-card-back {
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  }
+  
+  .flip-card-front {
+    background-color: #f3f4f6;
+  }
+  
+  .flip-card-back {
+    background-color: var(--color-primary-yellow);
+    color: var(--color-text-base);
+    transform: rotateY(180deg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1.5rem;
+    text-align: center;
+  }
+  
+  .flip-card-back h3 {
+    position: relative;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .flip-card-back h3::after {
+    content: '';
+    position: absolute;
+    width: 40px;
+    height: 3px;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
+    border-radius: 1.5px;
+  }
+  
+  .flip-card-back .btn {
+    transform: translateY(5px);
+    opacity: 0.9;
+    transition: all 0.3s var(--bounce-effect) 0.1s;
+  }
+  
+  .flip-card-container:hover .flip-card-back .btn {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  
+  /* Logo carousel styles */
+  .logo-scroll {
+    width: 100%;
+    overflow: hidden;
+    padding: 20px 0;
+    position: relative;
+  }
+  
+  .logo-scroll::before,
+  .logo-scroll::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 30px;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+  }
+  
+  .logo-scroll::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(0,0,0,0.1), transparent);
+  }
+  
+  .logo-scroll::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(0,0,0,0.1), transparent);
+  }
+  
+  .logo-scroll-track {
+    display: flex;
+    width: max-content;
+    animation: logoScroll 35s linear infinite;
+  }
+  
+  .logo-scroll-track:hover {
+    animation-play-state: paused;
+  }
+  
+  @keyframes logoScroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+  
+  .logo-item {
+    width: 140px;
+    height: 70px;
+    flex-shrink: 0;
+    padding: 8px;
+    margin-right: 24px;
+    border-radius: 8px;
+    background-color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.4s var(--bounce-effect);
+    transform: translateY(0);
+  }
+  
+  .logo-item:hover {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px) scale(1.05);
+  }
+  
+  .logo-item-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+  
+  /* Loading animation */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .fade-in {
+    animation: fadeIn 0.8s var(--smooth-effect) forwards;
+  }
+  
+  .fade-in-delay-1 {
+    animation-delay: 0.2s;
+  }
+  
+  .fade-in-delay-2 {
+    animation-delay: 0.4s;
+  }
+  
+  .fade-in-delay-3 {
+    animation-delay: 0.6s;
+  }
+  
+  /* Floating animation */
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
+  
+  .floating {
+    animation: float 5s ease-in-out infinite;
+  }
+  
+  /* Responsive sizes */
+  @media (max-width: 640px) {
+    .logo-item {
+      width: 120px;
+      height: 60px;
+      margin-right: 16px;
+    }
+    
+    .logo-scroll::before,
+    .logo-scroll::after {
+      width: 20px;
+    }
+  }
+  
+  @media (min-width: 641px) and (max-width: 1024px) {
+    .logo-item {
+      width: 130px;
+      height: 65px;
+      margin-right: 20px;
+    }
+  }
 }
+
+/* Ensure Inter font is imported - this should be in your layout.tsx or similar */
+/* For example, using next/font:
+import { Inter } from 'next/font/google';
+const inter = Inter({ subsets: ['latin', 'cyrillic'] });
+And then apply inter.className to the body.
+*/
+
+/* Custom animation and utility classes for catalog page */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+@keyframes borderGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(100, 116, 139, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(100, 116, 139, 0.2);
+  }
+}
+
+.animate-border-glow {
+  animation: borderGlow 2s infinite;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Hover transition utilities */
+.transition-all {
+  transition-property: all;
+}
+
+/* Dark theme utilities */
+.from-dark-900 {
+  --tw-gradient-from: #0B0F1A;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(11, 15, 26, 0));
+}
+
+.to-dark-800 {
+  --tw-gradient-to: #1C1F26;
+}
+
+.bg-dark-900 {
+  background-color: #0B0F1A;
+}
+
+.bg-dark-800 {
+  background-color: #1C1F26;
+}
+
+.bg-dark-700 {
+  background-color: #2A2E37;
+}
+
+/* Add these at the bottom of your globals.css file */

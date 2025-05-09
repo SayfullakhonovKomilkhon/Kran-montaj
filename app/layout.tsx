@@ -1,12 +1,22 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Montserrat, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import AnimationProvider from "./providers/AnimationProvider";
 import ErrorBoundary from "./providers/ErrorBoundary";
 
-const inter = Inter({ subsets: ["latin"] });
+const montserrat = Montserrat({ 
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-montserrat",
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-playfair",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "КРАН-МОНТАЖ - Грузоподъемное оборудование",
@@ -20,11 +30,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru">
-      <body className={inter.className}>
+      <body className={`${montserrat.variable} ${playfair.variable} font-montserrat`}>
         <ErrorBoundary>
           <AnimationProvider>
             <Navbar />
-            <main className="pt-[80px] md:pt-[90px]">{children}</main>
+            <main className="pt-[120px] md:pt-[130px]">{children}</main>
             <Footer />
           </AnimationProvider>
         </ErrorBoundary>

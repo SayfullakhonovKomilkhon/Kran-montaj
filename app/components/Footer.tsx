@@ -2,153 +2,279 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [isVisible, setIsVisible] = useState(false);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   return (
-    <footer className="bg-[#dce4fc] py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 divide-y md:divide-y-0 md:divide-x divide-gray-200">
-          {/* Left Column - Logo, Navigation, Hours, Social */}
-          <div className="space-y-6 md:pr-8">
-            {/* Logo */}
-            <div className="mb-6">
-              <Link href="/">
-                <Image 
-                  src="/img/services/logo.svg" 
-                  alt="Kran Montaj Servis" 
-                  width={120} 
-                  height={40}
-                  className="h-10 w-auto"
-                />
-              </Link>
-            </div>
-            
-            {/* Navigation */}
-            <div className="text-gray-700">
-              <nav className="flex flex-wrap gap-x-4">
-                <Link href="/" className="hover:text-orange-500 transition-colors">Главная</Link>
-                <Link href="/blog" className="hover:text-orange-500 transition-colors">Услуги</Link>
-                <Link href="/pricing" className="hover:text-orange-500 transition-colors">Каталог</Link>
-                <Link href="/about" className="hover:text-orange-500 transition-colors">Контакты</Link>
-              </nav>
-            </div>
-            
-            {/* Working Hours */}
-            <div className="text-gray-700">
-              <p className="flex items-center">
-                <svg className="w-4 h-4 mr-2 text-orange-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
-                (Пн–Сб) с 9:00 до 18:00
-              </p>
-            </div>
-            
-            {/* Social Icons */}
-            <div className="flex space-x-4">
-              <a href="#" className="bg-white rounded-full p-2 flex items-center justify-center w-10 h-10 text-orange-500 shadow-sm hover:bg-orange-50 hover:text-orange-600 transition-all duration-200 transform hover:scale-105">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd"></path>
-                </svg>
-              </a>
-              <a href="#" className="bg-white rounded-full p-2 flex items-center justify-center w-10 h-10 text-orange-500 shadow-sm hover:bg-orange-50 hover:text-orange-600 transition-all duration-200 transform hover:scale-105">
-                <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 4.01c-1 .49-1.98.689-3 .99-1.121-1.265-2.783-1.335-4.38-.737S11.977 6.323 12 8v1c-3.245.083-6.135-1.395-8-4 0 0-4.182 7.433 4 11-1.872 1.247-3.739 2.088-6 2 3.308 1.803 6.913 2.423 10.034 1.517 3.58-1.04 6.522-3.723 7.651-7.742a13.84 13.84 0 0 0 .497-3.753C20.18 7.773 21.692 5.25 22 4.009z" />
-                </svg>
-              </a>
-              <a href="#" className="bg-white rounded-full p-2 flex items-center justify-center w-10 h-10 text-orange-500 shadow-sm hover:bg-orange-50 hover:text-orange-600 transition-all duration-200 transform hover:scale-105">
-                <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
-                  <rect x="2" y="9" width="4" height="12" />
-                  <circle cx="4" cy="4" r="2" />
-                </svg>
-              </a>
-              <a href="#" className="bg-white rounded-full p-2 flex items-center justify-center w-10 h-10 text-orange-500 shadow-sm hover:bg-orange-50 hover:text-orange-600 transition-all duration-200 transform hover:scale-105">
-                <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-                </svg>
-              </a>
-            </div>
-          </div>
-          
-          {/* Center Column - Contact Info */}
-          <div className="pt-6 md:pt-0 md:px-8 space-y-6">
-            <h3 className="font-medium text-gray-900 text-lg mb-4">Контактная информация</h3>
-            
-            {/* Address */}
-            <div className="flex items-start space-x-3">
-              <div className="bg-white rounded-full p-2 flex items-center justify-center flex-shrink-0 w-10 h-10 text-orange-500 shadow-sm">
-                <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
+    <footer className="relative overflow-hidden">
+      {/* Decorative top border */}
+      <div className="h-2 w-full bg-gradient-to-r from-orange-500 via-yellow-400 to-orange-500"></div>
+      
+      {/* Decorative pattern overlay */}
+      <div className="absolute inset-0 opacity-5 pointer-events-none" 
+           style={{ 
+             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+             backgroundSize: '60px 60px'
+           }}>
+      </div>
+      
+      {/* Decorative shapes */}
+      <div className="absolute top-0 left-0 w-64 h-64 bg-yellow-300 rounded-full opacity-10 -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute top-1/4 right-0 w-80 h-80 bg-orange-400 rounded-full opacity-10 translate-x-1/2"></div>
+      <div className="absolute bottom-0 left-1/3 w-40 h-40 bg-yellow-400 rounded-full opacity-10 translate-y-1/2"></div>
+      
+      {/* Main content */}
+      <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className={`transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            {/* Top section with logo and newsletter */}
+            <div className="flex flex-col lg:flex-row justify-between items-center mb-16 pb-8 border-b border-orange-500/30">
+              {/* Logo */}
+              <div className="mb-8 lg:mb-0 transform transition-transform duration-500 hover:scale-105">
+                <Link href="/" className="block">
+                  <div className="h-14 w-auto bg-white/10 rounded-lg p-1 backdrop-blur-sm">
+                    <Image 
+                      src="/img/services/logo.svg" 
+                      alt="Kran Montaj Servis" 
+                      width={160} 
+                      height={50}
+                      className="h-12 w-auto"
+                    />
+                  </div>
+                </Link>
               </div>
-              <div>
-                <p className="text-gray-700">21 Revolution Street</p>
-                <p className="text-gray-700">Paris, France</p>
+              
+              {/* Newsletter subscription */}
+              <div className="w-full lg:w-auto">
+                <h3 className="text-lg font-semibold mb-3 text-center lg:text-left text-white">Подпишитесь на нашу рассылку</h3>
+                <div className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto lg:mx-0">
+                  <input 
+                    type="email" 
+                    placeholder="Ваш email" 
+                    className="px-4 py-3 bg-slate-700/70 border border-orange-500/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all text-white"
+                  />
+                  <button className="px-6 py-3 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-lg font-medium text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 hover:from-orange-600 hover:to-yellow-600">
+                    Подписаться
+                  </button>
+                </div>
               </div>
             </div>
             
-            {/* Phone */}
-            <div className="flex items-center space-x-3">
-              <div className="bg-white rounded-full p-2 flex items-center justify-center flex-shrink-0 w-10 h-10 text-orange-500 shadow-sm">
-                <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                </svg>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12">
+              {/* Mobile view - Two columns side by side (Company and Services) */}
+              <div className="flex flex-row md:hidden w-full">
+                {/* Company column - mobile */}
+                <div className="w-1/2 pr-2">
+                  <h3 className="text-base font-bold mb-4 pb-1.5 border-b border-orange-500 inline-block text-white">Компания</h3>
+                  <nav className="flex flex-col space-y-2.5">
+                    <Link href="/" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
+                      <span className="text-orange-500 mr-1">›</span> Главная
+                    </Link>
+                    <Link href="/about" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
+                      <span className="text-orange-500 mr-1">›</span> О компании
+                    </Link>
+                    <Link href="/services" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
+                      <span className="text-orange-500 mr-1">›</span> Услуги
+                    </Link>
+                    <Link href="/projects" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
+                      <span className="text-orange-500 mr-1">›</span> Проекты
+                    </Link>
+                    <Link href="/contacts" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
+                      <span className="text-orange-500 mr-1">›</span> Контакты
+                    </Link>
+                  </nav>
+                </div>
+                
+                {/* Services column - mobile */}
+                <div className="w-1/2 pl-2">
+                  <h3 className="text-base font-bold mb-4 pb-1.5 border-b border-orange-500 inline-block text-white">Услуги</h3>
+                  <nav className="flex flex-col space-y-2.5">
+                    <Link href="/services/installation" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
+                      <span className="text-orange-500 mr-1">›</span> Монтаж кранов
+                    </Link>
+                    <Link href="/services/maintenance" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
+                      <span className="text-orange-500 mr-1">›</span> Техобслуживание
+                    </Link>
+                    <Link href="/services/repair" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
+                      <span className="text-orange-500 mr-1">›</span> Ремонт кранов
+                    </Link>
+                    <Link href="/services/certification" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
+                      <span className="text-orange-500 mr-1">›</span> Сертификация
+                    </Link>
+                    <Link href="/services/parts" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
+                      <span className="text-orange-500 mr-1">›</span> Запчасти
+                    </Link>
+                  </nav>
+                </div>
               </div>
-              <p className="text-gray-700">+1 555 123456</p>
+              
+              {/* Desktop navigation - first column */}
+              <div className="hidden md:block md:col-span-3">
+                <h3 className="text-lg font-bold mb-6 pb-2 border-b border-orange-500 inline-block text-white">Компания</h3>
+                <nav className="flex flex-col space-y-3">
+                  <Link href="/" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
+                    <span className="text-orange-500 mr-1">›</span> Главная
+                  </Link>
+                  <Link href="/about" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
+                    <span className="text-orange-500 mr-1">›</span> О компании
+                  </Link>
+                  <Link href="/services" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
+                    <span className="text-orange-500 mr-1">›</span> Услуги
+                  </Link>
+                  <Link href="/projects" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
+                    <span className="text-orange-500 mr-1">›</span> Проекты
+                  </Link>
+                  <Link href="/contacts" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
+                    <span className="text-orange-500 mr-1">›</span> Контакты
+                  </Link>
+                </nav>
+              </div>
+              
+              {/* Desktop services - second column */}
+              <div className="hidden md:block md:col-span-3">
+                <h3 className="text-lg font-bold mb-6 pb-2 border-b border-orange-500 inline-block text-white">Услуги</h3>
+                <nav className="flex flex-col space-y-3">
+                  <Link href="/services/installation" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
+                    <span className="text-orange-500 mr-1">›</span> Монтаж кранов
+                  </Link>
+                  <Link href="/services/maintenance" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
+                    <span className="text-orange-500 mr-1">›</span> Техобслуживание
+                  </Link>
+                  <Link href="/services/repair" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
+                    <span className="text-orange-500 mr-1">›</span> Ремонт кранов
+                  </Link>
+                  <Link href="/services/certification" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
+                    <span className="text-orange-500 mr-1">›</span> Сертификация
+                  </Link>
+                  <Link href="/services/parts" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
+                    <span className="text-orange-500 mr-1">›</span> Запчасти
+                  </Link>
+                </nav>
+              </div>
+              
+              {/* Contact info - third column */}
+              <div className="md:col-span-3">
+                <h3 className="text-lg font-bold mb-6 pb-2 border-b border-orange-500 inline-block text-white">Контакты</h3>
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/20">
+                      <svg className="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-white">21 Revolution Street</p>
+                      <p className="text-white">Paris, France</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/20">
+                      <svg className="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                      </svg>
+                    </div>
+                    <a href="tel:+15551234567" className="text-white hover:text-yellow-400 transition-colors">+1 555 123456</a>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/20">
+                      <svg className="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                      </svg>
+                    </div>
+                    <a href="mailto:support@company.com" className="text-white hover:text-yellow-400 transition-colors">support@company.com</a>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/20">
+                      <svg className="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                      </svg>
+                    </div>
+                    <p className="text-white">(Пн–Сб) с 9:00 до 18:00</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Map - fourth column */}
+              <div className="md:col-span-3">
+                <h3 className="text-lg font-bold mb-6 pb-2 border-b border-orange-500 inline-block text-white">Наше расположение</h3>
+                <div className="rounded-xl overflow-hidden shadow-xl shadow-orange-500/10 transform transition-transform duration-500 hover:scale-[1.02] border border-orange-500/20">
+                  <iframe 
+                    src="https://yandex.ru/map-widget/v1/?um=constructor%3A123456&amp;source=constructor" 
+                    width="100%" 
+                    height="200" 
+                    frameBorder="0"
+                    title="Map"
+                    className="w-full h-full"
+                  ></iframe>
+                </div>
+              </div>
             </div>
             
-            {/* Email */}
-            <div className="flex items-center space-x-3">
-              <div className="bg-white rounded-full p-2 flex items-center justify-center flex-shrink-0 w-10 h-10 text-orange-500 shadow-sm">
-                <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                  <polyline points="22,6 12,13 2,6" />
-                </svg>
+            {/* Social media links */}
+            <div className="mt-16 mb-8 flex flex-col items-center">
+              <h3 className="text-lg font-bold mb-6 text-center text-white">Подписывайтесь на нас</h3>
+              <div className="flex space-x-4">
+                <a href="#" className="w-12 h-12 flex items-center justify-center rounded-full bg-slate-800 text-orange-500 hover:bg-gradient-to-br hover:from-orange-500 hover:to-yellow-500 hover:text-white transform hover:scale-110 transition-all duration-300 shadow-lg shadow-orange-500/20 border border-orange-500/20">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd"></path>
+                  </svg>
+                </a>
+                <a href="#" className="w-12 h-12 flex items-center justify-center rounded-full bg-slate-800 text-orange-500 hover:bg-gradient-to-br hover:from-orange-500 hover:to-yellow-500 hover:text-white transform hover:scale-110 transition-all duration-300 shadow-lg shadow-orange-500/20 border border-orange-500/20">
+                  <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
+                  </svg>
+                </a>
+                <a href="#" className="w-12 h-12 flex items-center justify-center rounded-full bg-slate-800 text-orange-500 hover:bg-gradient-to-br hover:from-orange-500 hover:to-yellow-500 hover:text-white transform hover:scale-110 transition-all duration-300 shadow-lg shadow-orange-500/20 border border-orange-500/20">
+                  <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                    <rect x="2" y="9" width="4" height="12" />
+                    <circle cx="4" cy="4" r="2" />
+                  </svg>
+                </a>
+                <a href="#" className="w-12 h-12 flex items-center justify-center rounded-full bg-slate-800 text-orange-500 hover:bg-gradient-to-br hover:from-orange-500 hover:to-yellow-500 hover:text-white transform hover:scale-110 transition-all duration-300 shadow-lg shadow-orange-500/20 border border-orange-500/20">
+                  <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                  </svg>
+                </a>
+                <a href="#" className="w-12 h-12 flex items-center justify-center rounded-full bg-slate-800 text-orange-500 hover:bg-gradient-to-br hover:from-orange-500 hover:to-yellow-500 hover:text-white transform hover:scale-110 transition-all duration-300 shadow-lg shadow-orange-500/20 border border-orange-500/20">
+                  <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                  </svg>
+                </a>
               </div>
-              <a href="mailto:support@company.com" className="text-gray-700 hover:text-orange-500 transition-colors">support@company.com</a>
             </div>
-          </div>
-          
-          {/* Right Column - Map */}
-          <div className="pt-6 md:pt-0 md:pl-8">
-            <h3 className="font-medium text-gray-900 text-lg mb-4">Наше расположение</h3>
-            <div className="w-full md:w-[300px] h-48 rounded-lg overflow-hidden bg-white shadow-md">
-              {/* Placeholder for Yandex map */}
-              <iframe 
-                src="https://yandex.ru/map-widget/v1/?um=constructor%3A123456&amp;source=constructor" 
-                width="100%" 
-                height="100%" 
-                frameBorder="0"
-                title="Map"
-                className="w-full h-full"
-              ></iframe>
+            
+            {/* Copyright & Policy Links */}
+            <div className="mt-12 pt-8 border-t border-orange-500/30 flex flex-col md:flex-row justify-between items-center text-sm">
+              <div className="order-2 md:order-1 text-center md:text-left mt-4 md:mt-0">
+                <p className="text-white">© {currentYear} <span className="text-orange-500 font-medium">Kran Montaj Servis</span>. Все права защищены.</p>
+              </div>
+              
+              <div className="order-1 md:order-2 flex flex-wrap justify-center space-x-8">
+                <Link href="/privacy" className="text-white hover:text-yellow-400 transition-colors mb-2 md:mb-0">Политика конфиденциальности</Link>
+                <Link href="/terms" className="text-white hover:text-yellow-400 transition-colors mb-2 md:mb-0">Условия использования</Link>
+                <Link href="/sitemap" className="text-white hover:text-yellow-400 transition-colors">Карта сайта</Link>
+              </div>
             </div>
-          </div>
-        </div>
-        
-        {/* Copyright & Policy Links */}
-        <div className="mt-12 pt-6 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center text-gray-500 text-sm">
-          <div className="mb-4 md:mb-0">
-            <Image 
-              src="/logo.svg" 
-              alt="Kran Montaj Servis" 
-              width={80} 
-              height={30}
-              className="h-6 w-auto"
-            />
-          </div>
-          
-          <div className="mb-4 md:mb-0">
-            <p>© {currentYear} Kran Montaj Servis. All rights reserved.</p>
-          </div>
-          
-          <div className="flex space-x-4">
-            <Link href="/privacy" className="hover:text-orange-500 transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-orange-500 transition-colors">Terms of Service</Link>
           </div>
         </div>
       </div>

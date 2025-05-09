@@ -70,21 +70,25 @@ export default function ServiceSection() {
   };
 
   return (
-    <div className="py-12 sm:py-16 bg-blue-50">
+    <div className="py-16 sm:py-20 bg-gradient-to-b from-[#F5F7FA] to-[#EFF6FF]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div 
-          className="text-center mb-10 sm:mb-16"
+          className="text-center mb-12 sm:mb-16"
           data-aos="fade-up"
         >
+          <div className="inline-block mx-auto mb-4">
+            <div className="w-16 h-1 bg-gradient-to-r from-amber-400 to-amber-500 mx-auto mb-1 rounded-full"></div>
+            <div className="w-10 h-1 bg-gradient-to-r from-amber-400 to-amber-500 mx-auto rounded-full"></div>
+          </div>
           <h2 
-            className="text-2xl sm:text-3xl font-extrabold text-gray-900 md:text-4xl"
+            className="text-2xl sm:text-3xl font-bold text-gray-900 md:text-4xl"
             data-aos="fade-up"
             data-aos-delay="100"
           >
             Услуги
           </h2>
           <p 
-            className="mt-3 sm:mt-4 max-w-2xl text-lg sm:text-xl text-gray-500 mx-auto"
+            className="mt-4 sm:mt-5 max-w-2xl text-lg sm:text-xl text-gray-600 mx-auto"
             data-aos="fade-up"
             data-aos-delay="200"
           >
@@ -96,49 +100,70 @@ export default function ServiceSection() {
           {services.map((service, index) => (
             <div 
               key={service.id} 
-              className="flex flex-col items-center bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+              className="group flex flex-col items-center relative overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1"
               data-aos="fade-up"
               data-aos-delay={100 + (index * 100)}
               data-aos-duration="700"
             >
-              <div 
-                className="w-36 h-36 flex items-center justify-center mb-6 bg-blue-50 rounded-full p-4 relative"
-                data-aos="zoom-in"
-                data-aos-delay={200 + (index * 100)}
-              >
-                {imgErrors[service.id] ? (
-                  <div className="flex items-center justify-center">
-                    {fallbackIcons[index % fallbackIcons.length]}
-                  </div>
-                ) : (
-                  <div className="relative w-32 h-32">
-                    <Image
-                      src={service.image}
-                      alt={service.title}
-                      fill
-                      className={`object-contain ${service.scale}`}
-                      onError={() => handleImageError(service.id)}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  </div>
-                )}
-              </div>
+              {/* Card background with subtle gradient */}
+              <div className="absolute inset-0 bg-gradient-to-b from-white to-[#F8FAFC] z-0"></div>
               
-              <div className="text-center">
-                <h3 
-                  className="font-bold text-lg text-gray-900 mb-2"
-                  data-aos="fade-up"
-                  data-aos-delay={250 + (index * 100)}
+              {/* Decorative elements */}
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400/30 via-amber-500 to-amber-400/30 z-10"></div>
+              <div className="absolute bottom-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full -mb-12 -mr-12 z-0"></div>
+              <div className="absolute top-0 left-0 w-16 h-16 bg-amber-500/5 rounded-full -mt-8 -ml-8 z-0"></div>
+              
+              <div className="z-10 p-8 flex flex-col items-center w-full">
+                <div 
+                  className="w-36 h-36 flex items-center justify-center mb-6 bg-gradient-to-b from-[#F8FAFC] to-[#F1F5F9] rounded-full p-4 relative shadow-md"
+                  data-aos="zoom-in"
+                  data-aos-delay={200 + (index * 100)}
                 >
-                  {service.title}
-                </h3>
-                <p 
-                  className="text-gray-600 text-sm"
-                  data-aos="fade-up"
-                  data-aos-delay={300 + (index * 100)}
-                >
-                  {service.description}
-                </p>
+                  {imgErrors[service.id] ? (
+                    <div className="flex items-center justify-center">
+                      {fallbackIcons[index % fallbackIcons.length]}
+                    </div>
+                  ) : (
+                    <div className="relative w-32 h-32 transform transition-transform duration-500 group-hover:scale-110">
+                      <Image
+                        src={service.image}
+                        alt={service.title}
+                        fill
+                        className={`object-contain ${service.scale}`}
+                        onError={() => handleImageError(service.id)}
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="text-center">
+                  <h3 
+                    className="font-bold text-lg text-gray-900 mb-3 group-hover:text-amber-600 transition-colors duration-300"
+                    data-aos="fade-up"
+                    data-aos-delay={250 + (index * 100)}
+                  >
+                    {service.title}
+                  </h3>
+                  <div className="w-10 h-0.5 bg-gradient-to-r from-amber-400 to-amber-500 mx-auto mb-3 transform transition-all duration-500 group-hover:w-16"></div>
+                  <p 
+                    className="text-gray-600 text-sm"
+                    data-aos="fade-up"
+                    data-aos-delay={300 + (index * 100)}
+                  >
+                    {service.description}
+                  </p>
+                </div>
+                
+                {/* Animated bottom link/button */}
+                <div className="mt-5 w-full relative overflow-hidden">
+                  <div className="h-0.5 w-0 bg-gradient-to-r from-amber-400 to-amber-500 group-hover:w-full transition-all duration-500 opacity-70 mx-auto"></div>
+                  <div className="flex justify-center mt-3">
+                    <span className="text-amber-600 font-medium text-sm opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                      Подробнее
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
