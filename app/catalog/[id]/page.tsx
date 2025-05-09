@@ -36,23 +36,6 @@ function CatalogItemContent() {
   const params = useParams();
   const id = params.id as string;
   const [imageError, setImageError] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  
-  // Check if we're on mobile for conditional rendering
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    // Initial check
-    checkMobile();
-    
-    // Add event listener for window resize
-    window.addEventListener('resize', checkMobile);
-    
-    // Cleanup
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
   
   const handleImageError = () => {
     setImageError(true);
