@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 // Import Swiper React components and modules
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, EffectCoverflow } from 'swiper/modules';
+import type { SwiperRef } from 'swiper/react';
 // Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -163,11 +164,25 @@ export default function ExperienceSection() {
   // Custom navigation button refs
   const prevRef = useRef<HTMLButtonElement>(null);
   const nextRef = useRef<HTMLButtonElement>(null);
+  const swiperRef = useRef<SwiperRef>(null);
+
+  // Navigation click handlers
+  const handlePrevClick = () => {
+    if (swiperRef.current && swiperRef.current.swiper) {
+      swiperRef.current.swiper.slidePrev();
+    }
+  };
+
+  const handleNextClick = () => {
+    if (swiperRef.current && swiperRef.current.swiper) {
+      swiperRef.current.swiper.slideNext();
+    }
+  };
 
   return (
     <section 
       id="experienceSection" 
-      className="py-20 relative"
+      className="py-20 relative overflow-hidden"
       ref={sectionRef}
       style={{
         position: 'relative',
@@ -189,7 +204,7 @@ export default function ExperienceSection() {
       
       {/* Content with semi-transparent overlay for better readability */}
       <div className={`relative z-10 ${isVisible ? 'opacity-100' : 'opacity-0'}`} style={{ transition: 'opacity 0.8s ease-out 0.3s' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-hidden">
           {/* 15 years badge and heading */}
           <div className={`flex flex-col items-center mb-20 ${isVisible ? 'fade-in' : 'opacity-0'}`}>
             <div className="w-28 h-28 relative mb-8 floating">
@@ -207,9 +222,10 @@ export default function ExperienceSection() {
           </div>
 
           {/* Crane images slider */}
-          <div className={`relative mb-20 ${isVisible ? 'fade-in fade-in-delay-1' : 'opacity-0'}`}>
-            <div className="mb-10 relative">
+          <div className={`relative mb-20 ${isVisible ? 'fade-in fade-in-delay-1' : 'opacity-0'} overflow-hidden`}>
+            <div className="mb-10 relative carousel-container">
               <Swiper
+                ref={swiperRef}
                 modules={[Navigation, Pagination, Autoplay, EffectCoverflow]}
                 spaceBetween={30}
                 slidesPerView={1}
@@ -220,6 +236,8 @@ export default function ExperienceSection() {
                 navigation={{
                   prevEl: prevRef.current,
                   nextEl: nextRef.current,
+                  enabled: true,
+                  disabledClass: 'swiper-button-disabled',
                 }}
                 pagination={{ 
                   clickable: true,
@@ -230,6 +248,7 @@ export default function ExperienceSection() {
                 autoplay={{
                   delay: 5000,
                   disableOnInteraction: false,
+                  pauseOnMouseEnter: true,
                 }}
                 loop={true}
                 effect="coverflow"
@@ -242,6 +261,8 @@ export default function ExperienceSection() {
                 }}
                 speed={800}
                 grabCursor={true}
+                touchEventsTarget="container"
+                simulateTouch={true}
                 onSwiper={(swiper) => {
                   // Update navigation when Swiper instance is available
                   setTimeout(() => {
@@ -252,7 +273,7 @@ export default function ExperienceSection() {
                     }
                   });
                 }}
-                className="relative slider-container"
+                className="relative slider-container touch-swipe"
               >
                 {craneImages.map((crane) => (
                   <SwiperSlide key={crane.id}>
@@ -298,20 +319,22 @@ export default function ExperienceSection() {
               
               {/* Custom navigation buttons */}
               <button 
-                ref={prevRef} 
-                className="absolute top-1/2 left-4 z-10 transform -translate-y-1/2 flex items-center justify-center focus:outline-none transition-all"
+                ref={prevRef}
+                onClick={handlePrevClick}
+                className="absolute top-1/2 left-4 z-20 transform -translate-y-1/2 hidden md:flex items-center justify-center focus:outline-none transition-all w-10 h-10 rounded-full bg-white/30 backdrop-blur-sm text-yellow-500 hover:bg-white/60 hover:text-yellow-600"
                 aria-label="Previous slide"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-7 h-7 text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                 </svg>
               </button>
               <button 
-                ref={nextRef} 
-                className="absolute top-1/2 right-4 z-10 transform -translate-y-1/2 flex items-center justify-center focus:outline-none transition-all"
+                ref={nextRef}
+                onClick={handleNextClick}
+                className="absolute top-1/2 right-4 z-20 transform -translate-y-1/2 hidden md:flex items-center justify-center focus:outline-none transition-all w-10 h-10 rounded-full bg-white/30 backdrop-blur-sm text-yellow-500 hover:bg-white/60 hover:text-yellow-600"
                 aria-label="Next slide"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-7 h-7 text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                 </svg>
               </button>
@@ -322,7 +345,7 @@ export default function ExperienceSection() {
           </div>
 
           {/* Partner logos - NEW IMPLEMENTATION */}
-          <div className={`mt-16 mb-6 ${isVisible ? 'fade-in fade-in-delay-2' : 'opacity-0'}`}>
+          <div className={`mt-16 mb-6 ${isVisible ? 'fade-in fade-in-delay-2' : 'opacity-0'} overflow-hidden`}>
             <h3 className="text-xl sm:text-2xl font-bold text-center mb-10 text-white section-heading">
               Наши партнеры
             </h3>

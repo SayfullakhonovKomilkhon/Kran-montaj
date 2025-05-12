@@ -29,13 +29,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru">
-      <body className={`${montserrat.variable} ${playfair.variable} font-montserrat`}>
+    <html lang="ru" className="overflow-x-hidden">
+      <body className={`${montserrat.variable} ${playfair.variable} font-montserrat overflow-x-hidden`}>
         <ErrorBoundary>
           <AnimationProvider>
-            <Navbar />
-            <main className="pt-[120px] md:pt-[130px]">{children}</main>
-            <Footer />
+            <div className="overflow-x-hidden w-full">
+              <Navbar />
+              <main className="pt-[120px] md:pt-[130px]">{children}</main>
+              <Footer />
+            </div>
           </AnimationProvider>
         </ErrorBoundary>
       </body>

@@ -139,7 +139,7 @@ function CatalogItemContent() {
   }
 
   return (
-    <div className="bg-gradient-to-b from-[#F5F7FA] to-[#EFF6FF] min-h-screen">
+    <div className="bg-gradient-to-b from-[#F5F7FA] to-[#EFF6FF] min-h-screen overflow-hidden">
       {/* Enhanced header with subtle design elements */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-[#ECF0F1] to-[#F8F9FA]/50 opacity-70"></div>
@@ -187,9 +187,10 @@ function CatalogItemContent() {
         <div className="absolute left-0 right-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-200/30 to-transparent"></div>
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 pb-16 md:pb-24 sm:px-6 lg:px-8">
-        <div className="absolute -left-64 top-1/3 w-96 h-96 bg-amber-100/20 rounded-full blur-3xl"></div>
-        <div className="absolute -right-64 bottom-1/3 w-96 h-96 bg-amber-100/20 rounded-full blur-3xl"></div>
+      <div className="relative max-w-7xl mx-auto px-4 pb-16 md:pb-24 sm:px-6 lg:px-8 overflow-hidden">
+        {/* Adjust decorative elements to prevent overflow on smaller screens */}
+        <div className="absolute sm:-left-32 md:-left-64 top-1/3 w-64 md:w-96 h-64 md:h-96 bg-amber-100/20 rounded-full blur-3xl"></div>
+        <div className="absolute sm:-right-32 md:-right-64 bottom-1/3 w-64 md:w-96 h-64 md:h-96 bg-amber-100/20 rounded-full blur-3xl"></div>
         
         {/* Main content grid - optimized for mobile first */}
         <div className="relative z-10 md:grid md:grid-cols-12 md:gap-8 pt-4 md:pt-8 lg:pt-12">
