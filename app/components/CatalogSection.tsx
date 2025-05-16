@@ -2,29 +2,57 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+
+// Define product type based on the Supabase database structure
+interface Product {
+  id: string;
+  title: string;
+  description: string;
+  image_url: string | null;
+  price: number | null;
+}
 
 export default function CatalogSection() {
-  const catalogItems = [
-    {
-      id: 1,
-      title: 'Козловой кран',
-      description: 'Козловые краны для промышленных предприятий различной грузоподъемности',
-      image: '/img/services/catalog-img-1.png',
-    },
-    {
-      id: 2,
-      title: 'Мостовой кран',
-      description: 'Мостовые краны (однобалочные, двухбалочные, опорные, подвесные) для различных задач',
-      image: '/img/services/catalog-img-1.png',
-    },
-    {
-      id: 3,
-      title: 'Комплектующие',
-      description: 'Запасные части и комплектующие для кранового оборудования, включая тали и электротельферы',
-      image: '/img/services/catalog-img-1.png',
-    },
-  ];
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Fetch products from Supabase
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        setLoading(true);
+        console.log('Fetching products for home page...');
+        
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .limit(3);
+
+        if (error) {
+          console.error('Supabase error details:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          });
+          throw error;
+        }
+
+        console.log('Products data received for home page:', data);
+        setProducts(data || []);
+      } catch (err: any) {
+        console.error('Error fetching products:', err);
+        setError('Failed to load products');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProducts();
+  }, []);
 
   // SVG fallback icons
   const fallbackIcons = [
@@ -42,7 +70,7 @@ export default function CatalogSection() {
   // Handle image loading errors
   const [imgErrors, setImgErrors] = useState<{[key: string]: boolean}>({});
   
-  const handleImageError = (id: number) => {
+  const handleImageError = (id: string) => {
     setImgErrors(prev => ({...prev, [id]: true}));
   };
 
@@ -75,57 +103,83 @@ export default function CatalogSection() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
-          {catalogItems.map((item, index) => (
-            <div 
-              key={item.id} 
-              className="bg-white rounded-lg shadow-lg p-6 flex flex-col hover:shadow-xl transition-shadow border border-gray-100"
-              data-aos="fade-up"
-              data-aos-delay={150 * (index + 1)}
-              data-aos-duration="700"
-            >
-              <div 
-                className="mb-5 flex justify-center h-48 bg-gray-50 rounded-lg p-4 relative"
-                data-aos="zoom-in"
-                data-aos-delay={200 * (index + 1)}
-              >
-                {imgErrors[item.id] ? (
-                  <div className="flex items-center justify-center w-full h-full">
-                    {fallbackIcons[index % fallbackIcons.length]}
-                  </div>
-                ) : (
-                  <div className="relative w-full h-full">
-                    <Image
-                      src={item.image}
-                      alt={item.title}
-                      fill
-                      className="object-contain"
-                      onError={() => handleImageError(item.id)}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  </div>
-                )}
-              </div>
-              
-              <div>
-                <h3 
-                  className="font-bold text-lg text-gray-900 mb-2"
-                  data-aos="fade-up"
-                  data-aos-delay={250 * (index + 1)}
-                >
-                  {item.title}
-                </h3>
-                <p 
-                  className="text-gray-600 text-sm mb-4"
-                  data-aos="fade-up"
-                  data-aos-delay={300 * (index + 1)}
-                >
-                  {item.description}
-                </p>
-              </div>
+        {loading ? (
+          <div className="flex justify-center items-center py-16">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500 mb-4"></div>
+              <p className="text-gray-700 font-medium">Загрузка продуктов...</p>
             </div>
-          ))}
-        </div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-10">
+            <p className="text-red-500 text-lg">{error}</p>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-xl">Нет доступных продуктов</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
+            {products.map((product, index) => (
+              <div 
+                key={product.id} 
+                className="bg-white rounded-lg shadow-lg p-6 flex flex-col hover:shadow-xl transition-shadow border border-gray-100"
+                data-aos="fade-up"
+                data-aos-delay={150 * (index + 1)}
+                data-aos-duration="700"
+              >
+                <div 
+                  className="mb-5 flex justify-center h-48 bg-gray-50 rounded-lg p-4 relative"
+                  data-aos="zoom-in"
+                  data-aos-delay={200 * (index + 1)}
+                >
+                  {imgErrors[product.id] || !product.image_url ? (
+                    <div className="flex items-center justify-center w-full h-full">
+                      {fallbackIcons[index % fallbackIcons.length]}
+                    </div>
+                  ) : (
+                    <div className="relative w-full h-full">
+                      <Image
+                        src={product.image_url}
+                        alt={product.title}
+                        fill
+                        className="object-contain"
+                        onError={() => handleImageError(product.id)}
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                <div>
+                  <h3 
+                    className="font-bold text-lg text-gray-900 mb-2"
+                    data-aos="fade-up"
+                    data-aos-delay={250 * (index + 1)}
+                  >
+                    {product.title}
+                  </h3>
+                  <p 
+                    className="text-gray-600 text-sm mb-4"
+                    data-aos="fade-up"
+                    data-aos-delay={300 * (index + 1)}
+                  >
+                    {product.description}
+                  </p>
+                  {product.price && (
+                    <p 
+                      className="text-amber-600 font-semibold text-sm"
+                      data-aos="fade-up"
+                      data-aos-delay={350 * (index + 1)}
+                    >
+                      <span>от {product.price.toLocaleString()} сум</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div 
           className="flex justify-center mt-10 relative z-10"

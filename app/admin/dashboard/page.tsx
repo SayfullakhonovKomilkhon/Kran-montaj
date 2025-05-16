@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSupabase } from '@/app/providers/supabase-provider';
-import { 
-  FiHome, FiFileText, FiImage, FiList, FiLogOut, 
-  FiSave, FiUpload, FiPlus, FiTrash2, FiEdit 
+import {
+  FiHome, FiFileText, FiImage, FiList, FiLogOut,
+  FiSave, FiUpload, FiPlus, FiTrash2, FiEdit
 } from 'react-icons/fi';
 import { supabase } from '@/app/lib/supabase';
 
@@ -39,25 +39,27 @@ interface CatalogItem {
 // Main dashboard interface with tabs
 export default function AdminDashboard() {
   const router = useRouter();
-  const { user, signOut } = useSupabase();
+  const { user, signOut, isLoading: authLoading } = useSupabase();
   const [activeTab, setActiveTab] = useState('content');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Redirect to login if not authenticated
+  // Session guard - redirect to login if not authenticated
   useEffect(() => {
-    if (!user && !isLoading) {
-      router.push('/admin/login');
-    } else {
-      setIsLoading(false);
+    if (!authLoading) {
+      if (!user) {
+        router.push('/admin/login');
+      } else {
+        setIsLoading(false);
+      }
     }
-  }, [user, isLoading, router]);
+  }, [user, authLoading, router]);
 
   const handleSignOut = async () => {
     await signOut();
     router.push('/admin/login');
   };
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -68,13 +70,18 @@ export default function AdminDashboard() {
     );
   }
 
+  // Don't render content if not authenticated
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">Панель администратора</h1>
-          <button 
+          <button
             onClick={handleSignOut}
             className="flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
           >
@@ -148,9 +155,9 @@ function ContentEditor() {
     try {
       setLoading(true);
       const { data, error } = await supabase.from('content_sections').select('*');
-      
+
       if (error) throw error;
-      
+
       if (data) {
         setSections(data as ContentSection[]);
       }
@@ -179,9 +186,9 @@ function ContentEditor() {
 
   const handleSaveSection = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!currentSection) return;
-    
+
     try {
       const { error } = await supabase
         .from('content_sections')
@@ -191,16 +198,16 @@ function ContentEditor() {
           updated_at: new Date().toISOString(),
         })
         .eq('id', currentSection.id);
-      
+
       if (error) throw error;
-      
+
       // Refresh the sections list
       fetchSections();
-      
+
       // Clear form
       setCurrentSection(null);
       setFormData({ title: '', content: '' });
-      
+
       alert('Раздел успешно обновлен!');
     } catch (error) {
       console.error('Error updating section:', error);
@@ -215,7 +222,7 @@ function ContentEditor() {
 
   const handleCreateSection = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const { error } = await supabase
         .from('content_sections')
@@ -227,15 +234,15 @@ function ContentEditor() {
             updated_at: new Date().toISOString(),
           },
         ]);
-      
+
       if (error) throw error;
-      
+
       // Refresh the sections list
       fetchSections();
-      
+
       // Clear form
       setFormData({ title: '', content: '' });
-      
+
       alert('Новый раздел успешно создан!');
     } catch (error) {
       console.error('Error creating section:', error);
@@ -288,7 +295,7 @@ function ContentEditor() {
           <h3 className="font-medium text-gray-700 mb-4">
             {currentSection ? `Редактирование: ${currentSection.title}` : 'Создать новый раздел'}
           </h3>
-          
+
           <form onSubmit={currentSection ? handleSaveSection : handleCreateSection}>
             <div className="mb-4">
               <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
@@ -304,7 +311,7 @@ function ContentEditor() {
                 required
               />
             </div>
-            
+
             <div className="mb-4">
               <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
                 Содержимое
@@ -319,7 +326,7 @@ function ContentEditor() {
                 required
               ></textarea>
             </div>
-            
+
             <div className="flex justify-end">
               <button
                 type="submit"
@@ -355,9 +362,9 @@ function ImageUploader() {
         .from('images')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
-      
+
       if (data) {
         setImages(data as Image[]);
       }
@@ -377,30 +384,30 @@ function ImageUploader() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!imageFile) {
       alert('Пожалуйста, выберите файл');
       return;
     }
-    
+
     try {
       setUploading(true);
-      
+
       // Upload to Supabase Storage
       const filename = `${Date.now()}-${imageFile.name}`;
       const { data: fileData, error: uploadError } = await supabase.storage
         .from('images')
         .upload(filename, imageFile);
-      
+
       if (uploadError) throw uploadError;
-      
+
       // Get public URL
       const { data: urlData } = await supabase.storage
         .from('images')
         .getPublicUrl(filename);
-      
+
       const publicUrl = urlData.publicUrl;
-      
+
       // Save image metadata to database
       const { error: dbError } = await supabase
         .from('images')
@@ -412,9 +419,9 @@ function ImageUploader() {
             created_at: new Date().toISOString(),
           },
         ]);
-      
+
       if (dbError) throw dbError;
-      
+
       // Reset form and refresh image list
       setImageFile(null);
       setImageDescription('');
@@ -423,7 +430,7 @@ function ImageUploader() {
         fileInput.value = '';
       }
       fetchImages();
-      
+
       alert('Изображение успешно загружено!');
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -437,28 +444,28 @@ function ImageUploader() {
     if (!confirm('Вы уверены, что хотите удалить это изображение?')) {
       return;
     }
-    
+
     try {
       setLoading(true);
-      
+
       // Delete from Storage
       const { error: storageError } = await supabase.storage
         .from('images')
         .remove([image.filename]);
-      
+
       if (storageError) throw storageError;
-      
+
       // Delete metadata from database
       const { error: dbError } = await supabase
         .from('images')
         .delete()
         .eq('id', image.id);
-      
+
       if (dbError) throw dbError;
-      
+
       // Refresh image list
       fetchImages();
-      
+
       alert('Изображение успешно удалено!');
     } catch (error) {
       console.error('Error deleting image:', error);
@@ -475,7 +482,7 @@ function ImageUploader() {
   return (
     <div>
       <h2 className="text-xl font-semibold text-gray-800 mb-6">Управление изображениями</h2>
-      
+
       {/* Upload Form */}
       <div className="bg-gray-50 p-6 rounded-lg mb-8">
         <h3 className="font-medium text-gray-700 mb-4">Загрузить новое изображение</h3>
@@ -493,7 +500,7 @@ function ImageUploader() {
               required
             />
           </div>
-          
+
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
               Описание
@@ -507,7 +514,7 @@ function ImageUploader() {
               placeholder="Опишите изображение (не обязательно)"
             />
           </div>
-          
+
           <div>
             <button
               type="submit"
@@ -520,11 +527,11 @@ function ImageUploader() {
           </div>
         </form>
       </div>
-      
+
       {/* Images Gallery */}
       <div>
         <h3 className="font-medium text-gray-700 mb-4">Галерея изображений</h3>
-        
+
         {images.length === 0 ? (
           <p className="text-gray-500">Нет загруженных изображений</p>
         ) : (
@@ -586,9 +593,9 @@ function CatalogManager() {
         .from('catalog_items')
         .select('*')
         .order('name');
-      
+
       if (error) throw error;
-      
+
       if (data) {
         setItems(data as CatalogItem[]);
       }
@@ -629,7 +636,7 @@ function CatalogManager() {
 
   const handleSaveItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       if (currentItem) {
         // Update existing item
@@ -643,9 +650,9 @@ function CatalogManager() {
             updated_at: new Date().toISOString(),
           })
           .eq('id', currentItem.id);
-        
+
         if (error) throw error;
-        
+
         alert('Товар успешно обновлен!');
       } else {
         // Create new item
@@ -661,12 +668,12 @@ function CatalogManager() {
               updated_at: new Date().toISOString(),
             },
           ]);
-        
+
         if (error) throw error;
-        
+
         alert('Новый товар успешно создан!');
       }
-      
+
       // Refresh items and clear form
       fetchItems();
       setCurrentItem(null);
@@ -686,17 +693,17 @@ function CatalogManager() {
     if (!confirm('Вы уверены, что хотите удалить этот товар?')) {
       return;
     }
-    
+
     try {
       const { error } = await supabase
         .from('catalog_items')
         .delete()
         .eq('id', item.id);
-      
+
       if (error) throw error;
-      
+
       fetchItems();
-      
+
       if (currentItem && currentItem.id === item.id) {
         setCurrentItem(null);
         setFormData({
@@ -706,7 +713,7 @@ function CatalogManager() {
           image_url: '',
         });
       }
-      
+
       alert('Товар успешно удален!');
     } catch (error) {
       console.error('Error deleting catalog item:', error);
@@ -769,7 +776,7 @@ function CatalogManager() {
           <h3 className="font-medium text-gray-700 mb-4">
             {currentItem ? `Редактирование: ${currentItem.name}` : 'Новый товар'}
           </h3>
-          
+
           <form onSubmit={handleSaveItem} className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
@@ -785,7 +792,7 @@ function CatalogManager() {
                 required
               />
             </div>
-            
+
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
                 Описание
@@ -799,7 +806,7 @@ function CatalogManager() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               ></textarea>
             </div>
-            
+
             <div>
               <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
                 Цена
@@ -814,7 +821,7 @@ function CatalogManager() {
                 placeholder="например: 1200₽"
               />
             </div>
-            
+
             <div>
               <label htmlFor="image_url" className="block text-sm font-medium text-gray-700 mb-1">
                 URL изображения
@@ -829,7 +836,7 @@ function CatalogManager() {
                 placeholder="https://example.com/image.jpg"
               />
             </div>
-            
+
             <div className="flex justify-end">
               <button
                 type="submit"
@@ -844,4 +851,4 @@ function CatalogManager() {
       </div>
     </div>
   );
-} 
+}

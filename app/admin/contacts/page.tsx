@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSupabase } from '@/app/providers/supabase-provider';
 import { supabase } from '@/app/lib/supabase';
 import { FiEdit2, FiTrash2, FiPlus, FiSave } from 'react-icons/fi';
 
@@ -13,6 +15,8 @@ interface ContactInfo {
 }
 
 export default function ContactsManagement() {
+  const router = useRouter();
+  const { user, isLoading: authLoading } = useSupabase();
   const [contacts, setContacts] = useState<ContactInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -25,6 +29,12 @@ export default function ContactsManagement() {
   });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/admin/login');
+    }
+  }, [user, authLoading, router]);
 
   useEffect(() => {
     fetchContacts();
@@ -94,7 +104,7 @@ export default function ContactsManagement() {
   async function saveChanges(id: number) {
     setError(null);
     setSuccess(null);
-    
+
     try {
       const { error } = await supabase
         .from('contacts')
@@ -102,13 +112,13 @@ export default function ContactsManagement() {
         .eq('id', id);
 
       if (error) throw error;
-      
+
       // Update local contacts
-      const updatedContacts = contacts.map(c => 
+      const updatedContacts = contacts.map(c =>
         c.id === id ? { ...c, ...formData } : c
       );
       setContacts(updatedContacts);
-      
+
       setSuccess('Contact updated successfully');
       setEditingId(null);
     } catch (error) {
@@ -119,7 +129,7 @@ export default function ContactsManagement() {
 
   async function addContact() {
     setError(null);
-    
+
     try {
       const { data, error } = await supabase
         .from('contacts')
@@ -127,10 +137,10 @@ export default function ContactsManagement() {
         .select();
 
       if (error) throw error;
-      
+
       // Update local contacts
       setContacts([...contacts, ...(data || [])]);
-      
+
       setSuccess('Contact added successfully');
       setIsAddModalOpen(false);
       setFormData({
@@ -157,10 +167,10 @@ export default function ContactsManagement() {
         .eq('id', id);
 
       if (error) throw error;
-      
+
       // Update local contacts
       setContacts(contacts.filter(c => c.id !== id));
-      
+
       setSuccess('Contact deleted successfully');
     } catch (error) {
       console.error('Error deleting contact:', error);
@@ -175,6 +185,21 @@ export default function ContactsManagement() {
     { value: 'hours', label: 'Business Hours' },
     { value: 'social', label: 'Social Media' },
   ];
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="spinner animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Проверка авторизации...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="container mx-auto px-4">
@@ -350,7 +375,7 @@ export default function ContactsManagement() {
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
             <div className="p-6">
               <h2 className="text-xl font-bold mb-4">Add New Contact</h2>
-              
+
               <form className="space-y-4">
                 <div>
                   <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="type">
@@ -372,7 +397,7 @@ export default function ContactsManagement() {
                     ))}
                   </select>
                 </div>
-                
+
                 <div>
                   <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="label">
                     Label (optional)
@@ -387,7 +412,7 @@ export default function ContactsManagement() {
                     placeholder="e.g., Main Office, Support, etc."
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="value">
                     Value
@@ -402,7 +427,7 @@ export default function ContactsManagement() {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="order">
                     Order
@@ -417,9 +442,9 @@ export default function ContactsManagement() {
                     min="1"
                   />
                 </div>
-                
+
                 {error && <p className="text-red-500 text-sm">{error}</p>}
-                
+
                 <div className="flex justify-end space-x-2">
                   <button
                     type="button"
@@ -443,4 +468,4 @@ export default function ContactsManagement() {
       )}
     </div>
   );
-} 
+}

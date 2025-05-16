@@ -192,7 +192,7 @@ export default function ExperienceSection() {
       <div 
         className="absolute inset-0 z-0 bg-fixed" 
         style={{
-          backgroundImage: 'url("/img/services/header-background.png")', 
+          backgroundImage: 'url("/img/services/contact-bg.png")', 
           backgroundSize: 'cover', 
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',

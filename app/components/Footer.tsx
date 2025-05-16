@@ -3,10 +3,17 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+
+interface Category {
+  name: string;
+  slug?: string;
+}
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const [isVisible, setIsVisible] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
   
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -15,6 +22,52 @@ export default function Footer() {
     
     return () => clearTimeout(timer);
   }, []);
+  
+  // Fetch categories from Supabase
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        // First get all product categories to exclude them from services
+        const { data: productCategories, error: productError } = await supabase
+          .from('products_with_category')
+          .select('category_id');
+        
+        if (productError) {
+          console.error('Error fetching product categories:', productError);
+          return;
+        }
+        
+        // Extract the category_ids that belong to products
+        const productCategoryIds = productCategories?.map(item => item.category_id) || [];
+        
+        // Fetch all categories
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*');
+        
+        if (error) {
+          console.error('Error fetching categories:', error);
+          return;
+        }
+        
+        // Filter out categories that belong to products
+        const serviceCategories = data?.filter(category => 
+          !productCategoryIds.includes(category.id)
+        ) || [];
+        
+        setCategories(serviceCategories);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+      }
+    }
+    
+    fetchCategories();
+  }, []);
+  
+  // Function to convert name to slug
+  const getSlug = (name: string) => {
+    return name.toLowerCase().replaceAll(' ', '-');
+  };
   
   return (
     <footer className="relative overflow-hidden">
@@ -100,21 +153,35 @@ export default function Footer() {
                 <div className="w-1/2 pl-2">
                   <h3 className="text-base font-bold mb-4 pb-1.5 border-b border-orange-500 inline-block text-white">Услуги</h3>
                   <nav className="flex flex-col space-y-2.5">
-                    <Link href="/services/installation" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
-                      <span className="text-orange-500 mr-1">›</span> Монтаж кранов
-                    </Link>
-                    <Link href="/services/maintenance" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
-                      <span className="text-orange-500 mr-1">›</span> Техобслуживание
-                    </Link>
-                    <Link href="/services/repair" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
-                      <span className="text-orange-500 mr-1">›</span> Ремонт кранов
-                    </Link>
-                    <Link href="/services/certification" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
-                      <span className="text-orange-500 mr-1">›</span> Сертификация
-                    </Link>
-                    <Link href="/services/parts" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
-                      <span className="text-orange-500 mr-1">›</span> Запчасти
-                    </Link>
+                    {categories.length > 0 ? (
+                      categories.map((category, index) => (
+                        <Link 
+                          key={index}
+                          href={`/services/${category.slug || getSlug(category.name)}`} 
+                          className="text-white hover:text-yellow-400 transition-all duration-300 transform hover:translate-x-2 flex items-center group text-sm"
+                        >
+                          <span className="text-orange-500 mr-1 transition-transform duration-300 group-hover:rotate-90">›</span> {category.name}
+                        </Link>
+                      ))
+                    ) : (
+                      <>
+                        <Link href="/services/installation" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
+                          <span className="text-orange-500 mr-1">›</span> Монтаж кранов
+                        </Link>
+                        <Link href="/services/maintenance" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
+                          <span className="text-orange-500 mr-1">›</span> Техобслуживание
+                        </Link>
+                        <Link href="/services/repair" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
+                          <span className="text-orange-500 mr-1">›</span> Ремонт кранов
+                        </Link>
+                        <Link href="/services/certification" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
+                          <span className="text-orange-500 mr-1">›</span> Сертификация
+                        </Link>
+                        <Link href="/services/parts" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center text-sm">
+                          <span className="text-orange-500 mr-1">›</span> Запчасти
+                        </Link>
+                      </>
+                    )}
                   </nav>
                 </div>
               </div>
@@ -145,21 +212,35 @@ export default function Footer() {
               <div className="hidden md:block md:col-span-3">
                 <h3 className="text-lg font-bold mb-6 pb-2 border-b border-orange-500 inline-block text-white">Услуги</h3>
                 <nav className="flex flex-col space-y-3">
-                  <Link href="/services/installation" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
-                    <span className="text-orange-500 mr-1">›</span> Монтаж кранов
-                  </Link>
-                  <Link href="/services/maintenance" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
-                    <span className="text-orange-500 mr-1">›</span> Техобслуживание
-                  </Link>
-                  <Link href="/services/repair" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
-                    <span className="text-orange-500 mr-1">›</span> Ремонт кранов
-                  </Link>
-                  <Link href="/services/certification" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
-                    <span className="text-orange-500 mr-1">›</span> Сертификация
-                  </Link>
-                  <Link href="/services/parts" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
-                    <span className="text-orange-500 mr-1">›</span> Запчасти
-                  </Link>
+                  {categories.length > 0 ? (
+                    categories.map((category, index) => (
+                      <Link 
+                        key={index}
+                        href={`/services/${category.slug || getSlug(category.name)}`} 
+                        className="text-white hover:text-yellow-400 transition-all duration-300 transform hover:translate-x-2 flex items-center group"
+                      >
+                        <span className="text-orange-500 mr-1 transition-transform duration-300 group-hover:rotate-90">›</span> {category.name}
+                      </Link>
+                    ))
+                  ) : (
+                    <>
+                      <Link href="/services/installation" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
+                        <span className="text-orange-500 mr-1">›</span> Монтаж кранов
+                      </Link>
+                      <Link href="/services/maintenance" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
+                        <span className="text-orange-500 mr-1">›</span> Техобслуживание
+                      </Link>
+                      <Link href="/services/repair" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
+                        <span className="text-orange-500 mr-1">›</span> Ремонт кранов
+                      </Link>
+                      <Link href="/services/certification" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
+                        <span className="text-orange-500 mr-1">›</span> Сертификация
+                      </Link>
+                      <Link href="/services/parts" className="text-white hover:text-yellow-400 transition-colors duration-300 transform hover:translate-x-1 flex items-center">
+                        <span className="text-orange-500 mr-1">›</span> Запчасти
+                      </Link>
+                    </>
+                  )}
                 </nav>
               </div>
               
@@ -248,32 +329,12 @@ export default function Footer() {
                     <circle cx="4" cy="4" r="2" />
                   </svg>
                 </a>
-                <a href="#" className="w-12 h-12 flex items-center justify-center rounded-full bg-slate-800 text-orange-500 hover:bg-gradient-to-br hover:from-orange-500 hover:to-yellow-500 hover:text-white transform hover:scale-110 transition-all duration-300 shadow-lg shadow-orange-500/20 border border-orange-500/20">
-                  <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-                  </svg>
-                </a>
-                <a href="#" className="w-12 h-12 flex items-center justify-center rounded-full bg-slate-800 text-orange-500 hover:bg-gradient-to-br hover:from-orange-500 hover:to-yellow-500 hover:text-white transform hover:scale-110 transition-all duration-300 shadow-lg shadow-orange-500/20 border border-orange-500/20">
-                  <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-                  </svg>
-                </a>
               </div>
             </div>
             
-            {/* Copyright & Policy Links */}
-            <div className="mt-12 pt-8 border-t border-orange-500/30 flex flex-col md:flex-row justify-between items-center text-sm">
-              <div className="order-2 md:order-1 text-center md:text-left mt-4 md:mt-0">
-                <p className="text-white">© {currentYear} <span className="text-orange-500 font-medium">Kran Montaj Servis</span>. Все права защищены.</p>
-              </div>
-              
-              <div className="order-1 md:order-2 flex flex-wrap justify-center space-x-8">
-                <Link href="/privacy" className="text-white hover:text-yellow-400 transition-colors mb-2 md:mb-0">Политика конфиденциальности</Link>
-                <Link href="/terms" className="text-white hover:text-yellow-400 transition-colors mb-2 md:mb-0">Условия использования</Link>
-                <Link href="/sitemap" className="text-white hover:text-yellow-400 transition-colors">Карта сайта</Link>
-              </div>
+            {/* Copyright */}
+            <div className="text-center pt-8 mt-8 border-t border-orange-500/20">
+              <p className="text-gray-400 text-sm">&copy; {currentYear} КРАН-МОНТАЖ. Все права защищены</p>
             </div>
           </div>
         </div>

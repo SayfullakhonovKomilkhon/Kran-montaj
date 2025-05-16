@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSupabase } from '@/app/providers/supabase-provider';
 import { supabase } from '@/app/lib/supabase';
 import { FiEdit2, FiSave, FiUpload } from 'react-icons/fi';
 
@@ -14,6 +16,8 @@ interface ContentItem {
 }
 
 export default function GeneralContentManagement() {
+  const router = useRouter();
+  const { user, isLoading: authLoading } = useSupabase();
   const [content, setContent] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [sections, setSections] = useState<string[]>([]);
@@ -25,6 +29,12 @@ export default function GeneralContentManagement() {
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/admin/login');
+    }
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
     fetchContent();
   }, [selectedSection]);
 
@@ -32,17 +42,17 @@ export default function GeneralContentManagement() {
     setLoading(true);
     try {
       let query = supabase.from('general_content').select('*');
-      
+
       if (selectedSection !== 'all') {
         query = query.eq('section', selectedSection);
       }
-      
+
       const { data, error } = await query;
 
       if (error) throw error;
-      
+
       setContent(data || []);
-      
+
       // Extract unique sections
       if (data) {
         const uniqueSections = Array.from(new Set(data.map(item => item.section)));
@@ -89,7 +99,7 @@ export default function GeneralContentManagement() {
 
     setIsUploading(true);
     setError(null);
-    
+
     try {
       const file = e.target.files[0];
       const fileExt = file.name.split('.').pop();
@@ -103,26 +113,26 @@ export default function GeneralContentManagement() {
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from('images').getPublicUrl(filePath);
-      
+
       setFormData({
         ...formData,
         image_url: data.publicUrl,
       });
-      
+
       // Automatically save after uploading
       const { error } = await supabase
         .from('general_content')
         .update({ image_url: data.publicUrl })
         .eq('id', item.id);
-        
+
       if (error) throw error;
-      
+
       // Update local content
-      const updatedContent = content.map(c => 
+      const updatedContent = content.map(c =>
         c.id === item.id ? { ...c, image_url: data.publicUrl } : c
       );
       setContent(updatedContent);
-      
+
       setSuccess('Image updated successfully');
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -135,7 +145,7 @@ export default function GeneralContentManagement() {
   async function saveChanges(item: ContentItem) {
     setError(null);
     setSuccess(null);
-    
+
     try {
       const { error } = await supabase
         .from('general_content')
@@ -143,13 +153,13 @@ export default function GeneralContentManagement() {
         .eq('id', item.id);
 
       if (error) throw error;
-      
+
       // Update local content
-      const updatedContent = content.map(c => 
+      const updatedContent = content.map(c =>
         c.id === item.id ? { ...c, ...formData } : c
       );
       setContent(updatedContent);
-      
+
       setSuccess('Content updated successfully');
       setEditingId(null);
       setFormData({});
@@ -157,6 +167,21 @@ export default function GeneralContentManagement() {
       console.error('Error saving content:', error);
       setError('Failed to save content');
     }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="spinner animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Проверка авторизации...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (
@@ -224,7 +249,7 @@ export default function GeneralContentManagement() {
                         />
                       </div>
                     )}
-                    
+
                     {(item.text !== undefined) && (
                       <div>
                         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor={`text-${item.id}`}>
@@ -240,7 +265,7 @@ export default function GeneralContentManagement() {
                         />
                       </div>
                     )}
-                    
+
                     <div className="flex justify-end space-x-2">
                       <button
                         type="button"
@@ -266,14 +291,14 @@ export default function GeneralContentManagement() {
                         <p>{item.title}</p>
                       </div>
                     )}
-                    
+
                     {item.text && (
                       <div className="mb-4">
                         <h3 className="text-sm font-bold text-gray-700 mb-1">Text:</h3>
                         <p className="whitespace-pre-wrap">{item.text}</p>
                       </div>
                     )}
-                    
+
                     <div className="flex justify-between items-end">
                       <button
                         className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center"
@@ -284,7 +309,7 @@ export default function GeneralContentManagement() {
                     </div>
                   </div>
                 )}
-                
+
                 {/* Image section - always shown */}
                 {item.image_url !== undefined && (
                   <div className="mt-6 pt-6 border-t">
@@ -304,11 +329,11 @@ export default function GeneralContentManagement() {
                         )}
                       </div>
                       <div className="flex-1">
-                        <label 
-                          htmlFor={`image-${item.id}`} 
+                        <label
+                          htmlFor={`image-${item.id}`}
                           className="px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 border cursor-pointer inline-flex items-center"
                         >
-                          <FiUpload className="mr-2" /> 
+                          <FiUpload className="mr-2" />
                           {isUploading ? 'Uploading...' : 'Upload New Image'}
                           <input
                             id={`image-${item.id}`}
@@ -330,4 +355,4 @@ export default function GeneralContentManagement() {
       )}
     </div>
   );
-} 
+}
