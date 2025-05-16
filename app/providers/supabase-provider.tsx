@@ -10,11 +10,12 @@ interface SupabaseContextProps {
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<any>;
+  supabase: typeof supabase;
 }
 
 interface AdminUser {
   id: string;
-  email: string;
+  login: string;
   password: string;
   full_name?: string;
   last_login?: string;
@@ -59,12 +60,16 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      // Check if user exists in users table with matching credentials
+      console.log('Sign in attempt:', { email, password });
+      
+      // Check if user exists in users_with_auth table with matching credentials
       const { data: user, error: queryError } = await supabase
-        .from('users')
+        .from('users_with_auth')
         .select('*')
-        .eq('email', email)
+        .eq('login', email)
         .single();
+      
+      console.log('Query result:', { user, error: queryError });
       
       if (queryError || !user) {
         return { error: { message: 'Invalid email or password' } };
@@ -78,7 +83,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       // Update last_login timestamp
       const now = new Date().toISOString();
       const { error: updateError } = await supabase
-        .from('users')
+        .from('users_with_auth')
         .update({ last_login: now })
         .eq('id', user.id);
       
@@ -87,19 +92,18 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         // Continue anyway, this is not a critical error
       }
       
-      // Create a session with Supabase Auth
-      const { data, error } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password 
-      });
+      // Create a custom user object
+      const customUser = {
+        id: user.id,
+        email: user.login,
+        user_metadata: {
+          full_name: user.full_name || ''
+        }
+      };
       
-      if (error) {
-        return { error };
-      }
-      
-      // Set user in state
-      setUser(data.user);
-      setSession(data.session);
+      // Set custom user in state (no session needed)
+      setUser(customUser as unknown as User);
+      setSession({ access_token: 'custom_token', refresh_token: '' } as unknown as Session);
       
       return { data: { user } };
     } catch (error) {
@@ -109,7 +113,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    return supabase.auth.signOut();
+    // No need to call Supabase Auth signOut, just clear our state
+    setUser(null);
+    setSession(null);
+    return { error: null };
   };
 
   const value = {
@@ -118,6 +125,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     signIn,
     signOut,
+    supabase,
   };
 
   return <SupabaseContext.Provider value={value}>{children}</SupabaseContext.Provider>;

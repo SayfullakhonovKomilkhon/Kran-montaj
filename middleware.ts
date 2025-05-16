@@ -7,8 +7,8 @@ export async function middleware(request: NextRequest) {
   
   // Create a cookies container
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mcwxaystuoslhspsnfy.supabase.co',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jd3hheXlzdW9zbGhzcHNubmZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNDI1NTYsImV4cCI6MjA2MjYxODU1Nn0.a55WRVX8xbrR0m6sNBLRETMnd35cA-jjWNqXmc5W-wA',
+    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mcwxaxysuoslhspsnnfy.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jd3hheHlzdW9zbGhzcHNubmZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNDI1NTYsImV4cCI6MjA2MjYxODU1Nn0.a55WRVX8xbrR0m6sNBLRETMnd35cA-jjWNqXmc5W-wA',
     {
       cookies: {
         get(name) {
@@ -33,6 +33,11 @@ export async function middleware(request: NextRequest) {
     if (request.nextUrl.pathname !== '/admin/login') {
       return NextResponse.redirect(new URL('/admin/login', request.url));
     }
+  }
+  
+  // If the user is signed in and trying to access /admin, redirect to /admin/dashboard
+  if (session && request.nextUrl.pathname === '/admin') {
+    return NextResponse.redirect(new URL('/admin/dashboard', request.url));
   }
 
   return res;

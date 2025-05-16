@@ -21,13 +21,16 @@ export default function AdminLogin() {
     setError(null);
 
     try {
+      console.log('Login attempt:', { email, password });
       const { error } = await signIn(email, password);
       
       if (error) {
+        console.error('Login error:', error.message);
         setError(error.message);
       } else {
-        // Successful login, redirect to admin panel
-        router.push('/admin');
+        console.log('Login successful, redirecting to dashboard');
+        // Successful login, redirect to admin dashboard
+        router.push('/admin/dashboard');
         router.refresh();
       }
     } catch (err) {
