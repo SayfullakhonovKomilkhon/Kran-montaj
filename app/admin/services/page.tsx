@@ -4,162 +4,237 @@ import { supabase } from '@/app/lib/supabase'
 import { useSupabase } from '@/app/providers/supabase-provider'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { FiEdit2, FiLink, FiPlus, FiTrash2, FiUpload } from 'react-icons/fi'
+import { FiEdit2, FiLink, FiPlus, FiTrash2, FiUpload, FiSearch, FiImage } from 'react-icons/fi'
 
 interface Category {
-	id: string
+	id: number
 	name: string
 }
 
 interface Service {
-	id: string
+	id: number
 	name: string
 	description: string
-	image_url: string
-	category_id: string | null
+	image_url: string | null
+	category_id: number | null
 	category_name?: string
 }
 
-export default function ServicesManagement() {
+export default function ServicesAdmin() {
 	const router = useRouter()
 	const { user, isLoading: authLoading } = useSupabase()
 	const [services, setServices] = useState<Service[]>([])
 	const [categories, setCategories] = useState<Category[]>([])
 	const [loading, setLoading] = useState(true)
+	const [searchTerm, setSearchTerm] = useState('')
+	const [selectedCategoryId, setSelectedCategoryId] = useState<number | 'all'>('all')
+	const [isModalOpen, setIsModalOpen] = useState(false)
 	const [editingService, setEditingService] = useState<Service | null>(null)
-	const [formData, setFormData] = useState<Omit<Service, 'id' | 'category_name'>>({
+	const [formData, setFormData] = useState({
 		name: '',
 		description: '',
 		image_url: '',
-		category_id: null,
+		category_id: ''
 	})
-	const [isModalOpen, setIsModalOpen] = useState(false)
 	const [isUploading, setIsUploading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
-	const [selectedCategoryId, setSelectedCategoryId] = useState<string | 'all'>('all')
-	const [imageInputType, setImageInputType] = useState<'upload' | 'url'>('upload')
+	const [success, setSuccess] = useState<string | null>(null)
 	const [oldImagePath, setOldImagePath] = useState<string | null>(null)
 
 	useEffect(() => {
-		if (!authLoading && !user) {
-			router.push('/admin/login')
+		if (!authLoading) {
+			if (!user) {
+				router.push('/admin/login')
+			}
 		}
 	}, [user, authLoading, router])
 
 	useEffect(() => {
 		if (user) {
-			Promise.all([fetchServices(), fetchCategories()])
+			Promise.all([
+				fetchServices(),
+				fetchCategories(),
+				checkServicesTable()
+			])
 		}
 	}, [user])
 
 	useEffect(() => {
-		if (user && selectedCategoryId !== 'loading') {
+		if (user) {
 			fetchServices()
 		}
-	}, [selectedCategoryId])
+	}, [selectedCategoryId, searchTerm])
+
+	async function checkServicesTable() {
+		try {
+			console.log('Checking services table directly...')
+			const { data, error } = await supabase
+				.from('services')
+				.select('*, categories(name)')
+			
+			if (error) {
+				console.error('Error querying services table:', error)
+				setError('Error querying services table: ' + error.message)
+				return
+			}
+			
+			console.log('Direct services table query result:', data)
+			console.log('Services count:', data?.length || 0)
+			
+			if (data && data.length > 0) {
+				const transformedData = data.map(item => ({
+					id: item.id,
+					name: item.name || '',
+					description: item.description || '',
+					image_url: item.image_url,
+					category_id: item.category_id,
+					category_name: item.categories?.name || null
+				}));
+				
+				console.log('Transformed services data:', transformedData)
+				setServices(transformedData)
+				setLoading(false)
+				setSuccess('Found ' + transformedData.length + ' services in database')
+			} else {
+				setError('No services found in the database. Try adding some services using the "Add Service" button.')
+			}
+		} catch (error) {
+			console.error('Exception when checking services table:', error)
+			setError('Exception checking services: ' + (error as Error).message)
+		}
+	}
 
 	async function fetchCategories() {
 		try {
-			const { data, error } = await supabase.from('categories').select('*').order('name')
-
-			if (error) throw error
+			const { data, error } = await supabase
+				.from('categories')
+				.select('*')
+				.order('name')
+			
+			if (error) {
+				console.error('Error fetching categories:', error)
+				return
+			}
+			
+			console.log('Fetched categories:', data)
 			setCategories(data || [])
 		} catch (error) {
-			console.error('Error fetching categories:', error)
+			console.error('Exception fetching categories:', error)
 		}
 	}
 
 	async function fetchServices() {
 		setLoading(true)
 		try {
-			// Use the services_with_category view for better data
-			let query = supabase.from('services_with_category').select('*')
-
+			console.log('Fetching services...')
+			
+			let query = supabase
+				.from('services')
+				.select('*, categories(name)')
+			
 			if (selectedCategoryId !== 'all') {
 				query = query.eq('category_id', selectedCategoryId)
 			}
 
-			const { data, error } = await query.order('name')
+			if (searchTerm) {
+				query = query.ilike('name', `%${searchTerm}%`)
+			}
 
+			console.log('Fetching services with query:', {
+				selectedCategoryId,
+				searchTerm
+			})
+
+			const { data, error } = await query
+			
 			if (error) throw error
-			setServices(data || [])
+			
+			console.log('Fetched services data:', data)
+			console.log('Services data length:', data?.length || 0)
+			
+			const transformedData = data?.map(item => ({
+				id: item.id,
+				name: item.name || '',
+				description: item.description || '',
+				image_url: item.image_url,
+				category_id: item.category_id,
+				category_name: item.categories?.name || null
+			})) || [];
+			
+			setServices(transformedData)
 		} catch (error) {
 			console.error('Error fetching services:', error)
-			setError('Failed to load services')
+			setError('Failed to fetch services: ' + (error as Error).message)
 		} finally {
 			setLoading(false)
 		}
 	}
 
-	function openModal(service: Service | null = null) {
-		if (service) {
-			setEditingService(service)
-			setFormData({
-				name: service.name,
-				description: service.description,
-				image_url: service.image_url,
-				category_id: service.category_id,
-			})
+	function openAddModal() {
+		setEditingService(null)
+		setFormData({
+			name: '',
+			description: '',
+			image_url: '',
+			category_id: ''
+		})
+		setOldImagePath(null)
+		setIsModalOpen(true)
+		setError(null)
+		setSuccess(null)
+	}
 
-			// Store old image path for possible deletion
-			if (service.image_url && service.image_url.includes('img/services/')) {
+	function openEditModal(service: Service) {
+		setEditingService(service)
+		setFormData({
+			name: service.name,
+			description: service.description,
+			image_url: service.image_url || '',
+			category_id: service.category_id ? String(service.category_id) : ''
+		})
+		
+		console.log('Opening edit modal for service:', service)
+		console.log('Setting form data:', {
+			name: service.name,
+			description: service.description,
+			image_url: service.image_url || '',
+			category_id: service.category_id ? String(service.category_id) : ''
+		})
+		
+		// Store old image path for possible deletion
+		if (service.image_url && typeof service.image_url === 'string' && service.image_url.includes('img/services/')) {
+			try {
 				const urlParts = service.image_url.split('img/services/')
 				if (urlParts.length > 1) {
 					setOldImagePath(`services/${urlParts[1]}`)
+				} else {
+					setOldImagePath(null)
 				}
-			} else {
+			} catch (err) {
+				console.error('Error parsing image path:', err)
 				setOldImagePath(null)
 			}
-
-			// Determine input type based on image URL
-			if (service.image_url && service.image_url.includes('supabase.co')) {
-				setImageInputType('upload')
-			} else {
-				setImageInputType('url')
-			}
 		} else {
-			setEditingService(null)
-			setFormData({
-				name: '',
-				description: '',
-				image_url: '',
-				category_id: null,
-			})
 			setOldImagePath(null)
-			setImageInputType('upload')
 		}
+		
 		setIsModalOpen(true)
+		setError(null)
+		setSuccess(null)
 	}
 
 	function closeModal() {
 		setIsModalOpen(false)
-		setEditingService(null)
-		setError(null)
-		setOldImagePath(null)
 	}
 
 	const handleInputChange = (
 		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
 	) => {
 		const { name, value } = e.target
-
-		// Handle category_id as a special case
-		if (name === 'category_id') {
-			setFormData({
-				...formData,
-				[name]: value === '' ? null : value,
-			})
-		} else if (name === 'image_url' && imageInputType === 'url') {
-			setFormData({
-				...formData,
-				image_url: value,
-			})
-		} else {
-			setFormData({
-				...formData,
-				[name]: name === 'order' ? parseInt(value) || 0 : value,
-			})
-		}
+		setFormData({
+			...formData,
+			[name]: value,
+		})
 	}
 
 	async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -168,25 +243,47 @@ export default function ServicesManagement() {
 		}
 
 		setIsUploading(true)
+		setError(null)
+
 		try {
 			const file = e.target.files[0]
-			const fileExt = file.name.split('.').pop()
-			const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`
+			console.log('Uploading file:', file.name, 'size:', file.size)
+			
+			const fileName = `${Date.now()}-${file.name}`
 			const filePath = `services/${fileName}`
 
-			const { error: uploadError } = await supabase.storage.from('img').upload(filePath, file)
+			// Upload to existing bucket
+			console.log('Attempting to upload to path:', filePath)
+			const { data, error: uploadError } = await supabase.storage
+				.from('img')
+				.upload(filePath, file, {
+					cacheControl: '3600',
+					upsert: true
+				})
 
-			if (uploadError) throw uploadError
+			if (uploadError) {
+				console.error('Supabase storage upload error:', uploadError)
+				throw uploadError
+			}
 
-			const { data } = supabase.storage.from('img').getPublicUrl(filePath)
+			console.log('Upload success, data:', data)
+
+			// Get the public URL
+			const { data: urlData } = supabase.storage
+				.from('img')
+				.getPublicUrl(filePath)
+
+			// Check if urlData exists before accessing publicUrl
+			const publicUrl = urlData?.publicUrl || ''
+			console.log('Generated public URL:', publicUrl)
 
 			setFormData({
 				...formData,
-				image_url: data.publicUrl,
+				image_url: publicUrl,
 			})
 		} catch (error) {
 			console.error('Error uploading image:', error)
-			setError('Failed to upload image')
+			setError('Failed to upload image: ' + (error as Error).message)
 		} finally {
 			setIsUploading(false)
 		}
@@ -212,88 +309,109 @@ export default function ServicesManagement() {
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault()
 		setError(null)
+		setSuccess(null)
 
-		if (!formData.name.trim()) {
-			setError('Service name is required')
+		if (!formData.name || !formData.description) {
+			setError('Name and description are required')
 			return
 		}
 
 		try {
+			const serviceData = {
+				name: formData.name.trim(),
+				description: formData.description.trim(),
+				image_url: formData.image_url || null,
+				category_id: formData.category_id ? parseInt(formData.category_id) : null
+			}
+
+			console.log('Saving service with data:', serviceData)
+
 			if (editingService) {
-				// If the image has changed and the old one was in Supabase storage, delete it
+				console.log('Updating existing service with ID:', editingService.id)
+				
+				const hasChanges = 
+					serviceData.name !== editingService.name ||
+					serviceData.description !== editingService.description ||
+					serviceData.image_url !== editingService.image_url ||
+					serviceData.category_id !== editingService.category_id;
+
+				if (!hasChanges) {
+					console.log('No changes detected, skipping update')
+					setSuccess('No changes were made')
+					closeModal()
+					return
+				}
+				
 				if (oldImagePath && formData.image_url !== editingService.image_url) {
+					console.log('Image changed, deleting old image:', oldImagePath)
 					await deleteOldImage()
 				}
 
-				// Update existing service
-				const { error } = await supabase
+				// Now update the service
+				const { data, error } = await supabase
 					.from('services')
-					.update({
-						name: formData.name,
-						description: formData.description,
-						image_url: formData.image_url,
-						category_id: formData.category_id,
-					})
+					.update(serviceData)
 					.eq('id', editingService.id)
+					.select('*, categories(name)')
 
-				if (error) throw error
+				if (error) {
+					console.error('Error updating service:', error)
+					throw error
+				}
+				
+				console.log('Updated service result:', data)
+				setSuccess('Service updated successfully')
 			} else {
-				// Create new service
-				const { error } = await supabase.from('services').insert([
-					{
-						name: formData.name,
-						description: formData.description,
-						image_url: formData.image_url,
-						category_id: formData.category_id,
-					},
-				])
+				console.log('Inserting new service')
+				
+				const { data, error } = await supabase
+					.from('services')
+					.insert([serviceData])
+					.select('*, categories(name)')
 
-				if (error) throw error
+				if (error) {
+					console.error('Error inserting service:', error)
+					throw error
+				}
+				
+				console.log('Inserted service result:', data)
+				setSuccess('Service added successfully')
 			}
 
-			// Refresh services list
 			await fetchServices()
-			closeModal()
-		} catch (error: any) {
+			setIsModalOpen(false)
+		} catch (error) {
 			console.error('Error saving service:', error)
-			if (error.code === '23505') {
-				setError('A service with this name already exists')
-			} else {
-				setError('Failed to save service')
-			}
+			setError('Failed to save service: ' + (error as Error).message)
 		}
 	}
 
-	async function handleDelete(id: string) {
+	async function handleDelete(id: number) {
 		if (!confirm('Are you sure you want to delete this service?')) {
 			return
 		}
 
-		// Find the service to get its image URL
-		const serviceToDelete = services.find(s => s.id === id)
-		let imagePath = null
-
-		if (serviceToDelete?.image_url && serviceToDelete.image_url.includes('img/services/')) {
-			const urlParts = serviceToDelete.image_url.split('img/services/')
-			if (urlParts.length > 1) {
-				imagePath = `services/${urlParts[1]}`
-			}
-		}
-
 		try {
-			// Delete the record from the database
-			const { error } = await supabase.from('services').delete().eq('id', id)
-			if (error) throw error
-
-			// If successful and image exists in Supabase, delete it
-			if (imagePath) {
-				const { error: deleteError } = await supabase.storage.from('img').remove([imagePath])
-				if (deleteError) {
-					console.error('Error deleting image:', deleteError)
+			const serviceToDelete = services.find(s => s.id === id)
+			
+			if (serviceToDelete?.image_url && 
+				typeof serviceToDelete.image_url === 'string' && 
+				serviceToDelete.image_url.includes('img/services/')) {
+				try {
+					const urlParts = serviceToDelete.image_url.split('img/services/')
+					if (urlParts.length > 1) {
+						const imagePath = `services/${urlParts[1]}`
+						await supabase.storage.from('img').remove([imagePath])
+					}
+				} catch (err) {
+					console.error('Error parsing or deleting image path:', err)
 				}
 			}
 
-			// Refresh services list
+			const { error } = await supabase.from('services').delete().eq('id', id)
+
+			if (error) throw error
+			setSuccess('Service deleted successfully')
 			await fetchServices()
 		} catch (error) {
 			console.error('Error deleting service:', error)
@@ -301,27 +419,12 @@ export default function ServicesManagement() {
 		}
 	}
 
-	const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-		setSelectedCategoryId(e.target.value)
-	}
-
-	const handleImageInputTypeChange = (type: 'upload' | 'url') => {
-		setImageInputType(type)
-		// Clear the image_url when switching input types
-		if (type === 'upload' && !formData.image_url.includes('supabase.co')) {
-			setFormData({
-				...formData,
-				image_url: '',
-			})
-		}
-	}
-
 	if (authLoading) {
 		return (
-			<div className='flex items-center justify-center min-h-screen'>
-				<div className='text-center'>
-					<div className='spinner animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto'></div>
-					<p className='mt-4 text-gray-600'>Проверка авторизации...</p>
+			<div className="flex items-center justify-center min-h-screen">
+				<div className="text-center">
+					<div className="spinner animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+					<p className="mt-4 text-gray-600">Checking authentication...</p>
 				</div>
 			</div>
 		)
@@ -332,292 +435,265 @@ export default function ServicesManagement() {
 	}
 
 	return (
-		<div className='container mx-auto px-4'>
-			<div className='flex justify-between items-center mb-6'>
-				<h1 className='text-2xl md:text-3xl font-bold'>Services Management</h1>
-				<button
-					className='bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center'
-					onClick={() => openModal()}
-				>
-					<FiPlus className='mr-2' /> Add Service
-				</button>
-			</div>
-
-			{/* Category filter */}
-			<div className='bg-white p-4 rounded-lg shadow mb-6'>
-				<div className='flex items-center'>
-					<label className='text-sm font-medium text-gray-700 mr-3'>Filter by Category:</label>
+		<div className="container mx-auto px-4">
+			<div className="flex flex-col md:flex-row justify-between items-center mb-6">
+				<h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-0">Services Management</h1>
+				<div className="flex flex-col sm:flex-row w-full md:w-auto gap-4">
+					<div className="relative">
+						<input
+							type="text"
+							placeholder="Search services..."
+							value={searchTerm}
+							onChange={(e) => setSearchTerm(e.target.value)}
+							className="pl-10 pr-4 py-2 border rounded-md w-full"
+						/>
+						<FiSearch className="absolute left-3 top-3 text-gray-400" />
+					</div>
 					<select
-						value={selectedCategoryId}
-						onChange={handleCategoryChange}
-						className='w-64 p-2 border rounded'
+						value={selectedCategoryId === 'all' ? 'all' : selectedCategoryId}
+						onChange={(e) => setSelectedCategoryId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+						className="p-2 border rounded-md"
 					>
-						<option value='all'>All Categories</option>
-						{categories.map(category => (
+						<option value="all">All Categories</option>
+						{categories.map((category) => (
 							<option key={category.id} value={category.id}>
 								{category.name}
 							</option>
 						))}
 					</select>
+					<button
+						onClick={openAddModal}
+						className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+					>
+						<FiPlus className="mr-2" /> Add Service
+					</button>
 				</div>
 			</div>
 
 			{error && (
-				<div className='bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4'>
+				<div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
 					{error}
 				</div>
 			)}
 
-			{loading ? (
-				<div className='flex justify-center py-8'>
-					<div className='animate-pulse text-lg'>Loading services...</div>
-				</div>
-			) : services.length === 0 ? (
-				<div className='bg-white rounded-lg shadow p-6 text-center'>
-					<p className='text-gray-600 mb-4'>
-						No services found. Add your first service to get started.
-					</p>
-					<button
-						className='bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center mx-auto'
-						onClick={() => openModal()}
-					>
-						<FiPlus className='mr-2' /> Add Service
-					</button>
-				</div>
-			) : (
-				<div className='grid grid-cols-1 gap-6'>
-					{services.map(service => (
-						<div key={service.id} className='bg-white rounded-lg shadow overflow-hidden'>
-							<div className='md:flex'>
-								<div className='md:w-1/3 h-48 md:h-auto'>
-									{service.image_url ? (
-										<img
-											src={service.image_url}
-											alt={service.name}
-											className='w-full h-full object-cover'
-										/>
-									) : (
-										<div className='w-full h-full bg-gray-200 flex items-center justify-center'>
-											<p className='text-gray-500'>No image</p>
-										</div>
-									)}
-								</div>
-								<div className='p-6 md:w-2/3'>
-									<div className='flex justify-between items-start'>
-										<div>
-											<h2 className='text-xl font-bold mb-2'>{service.name}</h2>
-											<p className='text-sm text-gray-500 mb-2'>
-												Category: {service.category_name || 'None'}
-											</p>
-											<p className='text-gray-600 mb-4'>{service.description}</p>
-										</div>
-										<div className='flex space-x-2'>
-											<button
-												className='p-2 text-blue-500 hover:bg-blue-50 rounded'
-												onClick={() => openModal(service)}
-											>
-												<FiEdit2 />
-											</button>
-											<button
-												className='p-2 text-red-500 hover:bg-red-50 rounded'
-												onClick={() => handleDelete(service.id)}
-											>
-												<FiTrash2 />
-											</button>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					))}
+			{success && (
+				<div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4">
+					{success}
 				</div>
 			)}
 
-			{/* Modal for adding/editing services */}
+			{loading ? (
+				<div className="flex justify-center py-8">
+					<div className="animate-pulse text-lg">Loading services...</div>
+				</div>
+			) : services.length === 0 ? (
+				<div className="bg-white rounded-lg shadow p-6 text-center">
+					<p className="text-gray-600">No services found. Try a different search or category.</p>
+					<button
+						onClick={() => checkServicesTable()}
+						className="mt-4 text-blue-600 hover:text-blue-800 underline"
+					>
+						Diagnose Table Issues
+					</button>
+				</div>
+			) : (
+				<div className="overflow-x-auto bg-white rounded-lg shadow">
+					<table className="min-w-full divide-y divide-gray-200">
+						<thead className="bg-gray-50">
+							<tr>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									Image
+								</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									Title
+								</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									Description
+								</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									Category
+								</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									Actions
+								</th>
+							</tr>
+						</thead>
+						<tbody className="bg-white divide-y divide-gray-200">
+							{services.map((service) => (
+								<tr key={service.id}>
+									<td className="px-6 py-4 whitespace-nowrap">
+										{service.image_url ? (
+											<div className="h-16 w-16 relative">
+												<img
+													src={service.image_url}
+													alt={service.name}
+													className="h-16 w-16 object-cover rounded"
+												/>
+											</div>
+										) : (
+											<div className="h-16 w-16 bg-gray-200 rounded flex items-center justify-center">
+												<FiImage className="text-gray-400" />
+											</div>
+										)}
+									</td>
+									<td className="px-6 py-4">
+										<div className="text-sm font-medium text-gray-900">{service.name}</div>
+									</td>
+									<td className="px-6 py-4">
+										<div className="text-sm text-gray-500 max-w-xs truncate">{service.description}</div>
+									</td>
+									<td className="px-6 py-4">
+										<div className="text-sm text-gray-900">{service.category_name || 'None'}</div>
+									</td>
+									<td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+										<button
+											onClick={() => openEditModal(service)}
+											className="text-blue-600 hover:text-blue-900 mr-3"
+										>
+											<FiEdit2 className="inline mr-1" /> Edit
+										</button>
+										<button
+											onClick={() => handleDelete(service.id)}
+											className="text-red-600 hover:text-red-900"
+										>
+											<FiTrash2 className="inline mr-1" /> Delete
+										</button>
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
+			)}
+
 			{isModalOpen && (
-				<div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50'>
-					<div className='bg-white rounded-lg shadow-lg w-full max-w-md'>
-						<div className='p-6'>
-							<h2 className='text-xl font-bold mb-4'>
+				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+					<div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+						<div className="p-6">
+							<h2 className="text-xl font-bold mb-4">
 								{editingService ? 'Edit Service' : 'Add New Service'}
 							</h2>
-
-							<form onSubmit={handleSubmit}>
-								<div className='mb-4'>
-									<label className='block text-gray-700 text-sm font-bold mb-2' htmlFor='name'>
-										Name
+							
+							<form onSubmit={handleSubmit} className="space-y-4">
+								<div>
+									<label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+										Title *
 									</label>
 									<input
-										type='text'
-										id='name'
-										name='name'
+										id="name"
+										name="name"
+										type="text"
+										required
 										value={formData.name}
 										onChange={handleInputChange}
-										className='w-full p-2 border rounded'
-										required
+										className="w-full p-2 border rounded"
 									/>
 								</div>
-
-								<div className='mb-4'>
-									<label
-										className='block text-gray-700 text-sm font-bold mb-2'
-										htmlFor='category_id'
-									>
+								
+								<div>
+									<label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
+										Description *
+									</label>
+									<textarea
+										id="description"
+										name="description"
+										required
+										value={formData.description}
+										onChange={handleInputChange}
+										rows={3}
+										className="w-full p-2 border rounded"
+									/>
+								</div>
+								
+								<div>
+									<label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="category">
 										Category
 									</label>
 									<select
-										id='category_id'
-										name='category_id'
-										value={formData.category_id || ''}
+										id="category"
+										name="category_id"
+										value={formData.category_id}
 										onChange={handleInputChange}
-										className='w-full p-2 border rounded'
+										className="w-full p-2 border rounded"
 									>
-										<option value=''>No Category</option>
-										{categories.map(category => (
+										<option value="">Select a category</option>
+										{categories.map((category) => (
 											<option key={category.id} value={category.id}>
 												{category.name}
 											</option>
 										))}
 									</select>
 								</div>
-
-								<div className='mb-4'>
-									<label
-										className='block text-gray-700 text-sm font-bold mb-2'
-										htmlFor='description'
-									>
-										Description
+								
+								<div>
+									<label className="block text-gray-700 text-sm font-bold mb-2">
+										Image
 									</label>
-									<textarea
-										id='description'
-										name='description'
-										value={formData.description}
-										onChange={handleInputChange}
-										className='w-full p-2 border rounded'
-										rows={4}
-									/>
-								</div>
-
-								<div className='mb-4'>
-									<label className='block text-gray-700 text-sm font-bold mb-2'>Image</label>
-
-									<div className='flex mb-3 border rounded overflow-hidden'>
-										<button
-											type='button'
-											className={`flex-1 py-2 px-4 flex items-center justify-center ${
-												imageInputType === 'upload'
-													? 'bg-blue-500 text-white'
-													: 'bg-gray-200 text-gray-700'
-											}`}
-											onClick={() => handleImageInputTypeChange('upload')}
-										>
-											<FiUpload className='mr-2' /> Upload
-										</button>
-										<button
-											type='button'
-											className={`flex-1 py-2 px-4 flex items-center justify-center ${
-												imageInputType === 'url'
-													? 'bg-blue-500 text-white'
-													: 'bg-gray-200 text-gray-700'
-											}`}
-											onClick={() => handleImageInputTypeChange('url')}
-										>
-											<FiLink className='mr-2' /> URL
-										</button>
+									<div className="flex flex-col md:flex-row gap-4">
+										<div className="flex-1">
+											<div className="flex items-center justify-center px-3 py-3 border-2 border-dashed border-gray-300 rounded-md">
+												<div className="space-y-1 text-center">
+													<div className="flex text-sm text-gray-600">
+														<label
+															htmlFor="image-upload"
+															className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500"
+														>
+															<span>Upload a file</span>
+															<input
+																id="image-upload"
+																name="image"
+																type="file"
+																className="sr-only"
+																accept="image/*"
+																onChange={handleImageUpload}
+																disabled={isUploading}
+															/>
+														</label>
+														<p className="pl-1">or drag and drop</p>
+													</div>
+													<p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+												</div>
+											</div>
+											{isUploading && (
+												<div className="mt-2 flex items-center justify-center">
+													<div className="spinner animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+													<span className="ml-2 text-sm text-gray-500">Uploading...</span>
+												</div>
+											)}
+										</div>
+										
+										<div className="w-full md:w-1/3">
+											{formData.image_url ? (
+												<div className="relative h-40 w-full">
+													<img
+														src={formData.image_url}
+														alt="Preview"
+														className="h-full w-full object-contain border rounded"
+													/>
+												</div>
+											) : (
+												<div className="h-40 w-full bg-gray-100 flex items-center justify-center border rounded">
+													<span className="text-gray-400">No image</span>
+												</div>
+											)}
+										</div>
 									</div>
-
-									{imageInputType === 'upload' ? (
-										<div>
-											{formData.image_url && (
-												<div className='mb-2'>
-													<img
-														src={formData.image_url}
-														alt='Preview'
-														className='w-40 h-40 object-cover rounded'
-													/>
-													<button
-														type='button'
-														onClick={() => {
-															if (oldImagePath) {
-																deleteOldImage()
-															}
-															setFormData({
-																...formData,
-																image_url: '',
-															})
-															setOldImagePath(null)
-														}}
-														className='mt-2 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm flex items-center'
-													>
-														<FiTrash2 className='mr-1' /> Delete Image
-													</button>
-												</div>
-											)}
-											<input
-												type='file'
-												id='image'
-												onChange={handleImageUpload}
-												className='border p-2 w-full rounded'
-												accept='image/*'
-											/>
-											{isUploading && <p className='text-sm text-gray-500 mt-1'>Uploading...</p>}
-										</div>
-									) : (
-										<div>
-											<input
-												type='text'
-												id='image_url'
-												name='image_url'
-												placeholder='https://example.com/image.jpg'
-												value={formData.image_url}
-												onChange={handleInputChange}
-												className='w-full p-2 border rounded'
-											/>
-											{formData.image_url && (
-												<div className='mt-2'>
-													<img
-														src={formData.image_url}
-														alt='Preview'
-														className='w-40 h-40 object-cover rounded'
-														onError={e => {
-															const target = e.target as HTMLImageElement
-															target.src = 'https://via.placeholder.com/150?text=Invalid+URL'
-														}}
-													/>
-													<button
-														type='button'
-														onClick={() => {
-															setFormData({
-																...formData,
-																image_url: '',
-															})
-														}}
-														className='mt-2 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm flex items-center'
-													>
-														<FiTrash2 className='mr-1' /> Delete Image
-													</button>
-												</div>
-											)}
-										</div>
-									)}
 								</div>
-
-								{error && <p className='text-red-500 text-sm mb-4'>{error}</p>}
-
-								<div className='flex justify-end space-x-2'>
+								
+								<div className="flex justify-end gap-2 pt-4">
 									<button
-										type='button'
+										type="button"
 										onClick={closeModal}
-										className='px-4 py-2 border border-gray-300 rounded hover:bg-gray-100'
+										className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
 									>
 										Cancel
 									</button>
 									<button
-										type='submit'
-										className='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'
+										type="submit"
+										className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
 										disabled={isUploading}
 									>
-										{editingService ? 'Update' : 'Create'}
+										{editingService ? 'Update Service' : 'Add Service'}
 									</button>
 								</div>
 							</form>
