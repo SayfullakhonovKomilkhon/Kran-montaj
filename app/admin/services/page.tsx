@@ -4,7 +4,7 @@ import { supabase } from '@/app/lib/supabase'
 import { useSupabase } from '@/app/providers/supabase-provider'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { FiEdit2, FiLink, FiPlus, FiTrash2, FiUpload, FiSearch, FiImage } from 'react-icons/fi'
+import { FiEdit2, FiImage, FiPlus, FiSearch, FiTrash2 } from 'react-icons/fi'
 
 interface Category {
 	id: number
@@ -24,6 +24,7 @@ export default function ServicesAdmin() {
 	const router = useRouter()
 	const { user, isLoading: authLoading } = useSupabase()
 	const [services, setServices] = useState<Service[]>([])
+	const [allServices, setAllServices] = useState<Service[]>([])
 	const [categories, setCategories] = useState<Category[]>([])
 	const [loading, setLoading] = useState(true)
 	const [searchTerm, setSearchTerm] = useState('')
@@ -34,7 +35,7 @@ export default function ServicesAdmin() {
 		name: '',
 		description: '',
 		image_url: '',
-		category_id: ''
+		category_id: '',
 	})
 	const [isUploading, setIsUploading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
@@ -51,36 +52,52 @@ export default function ServicesAdmin() {
 
 	useEffect(() => {
 		if (user) {
-			Promise.all([
-				fetchServices(),
-				fetchCategories(),
-				checkServicesTable()
-			])
+			Promise.all([fetchAllServices(), fetchCategories()])
 		}
 	}, [user])
 
 	useEffect(() => {
-		if (user) {
-			fetchServices()
+		if (allServices.length > 0) {
+			applyLocalFilters()
 		}
-	}, [selectedCategoryId, searchTerm])
+	}, [selectedCategoryId, searchTerm, allServices])
+
+	const applyLocalFilters = () => {
+		let filteredResults = [...allServices]
+
+		if (selectedCategoryId !== 'all') {
+			filteredResults = filteredResults.filter(
+				service => service.category_id === selectedCategoryId
+			)
+		}
+
+		if (searchTerm) {
+			const searchLower = searchTerm.toLowerCase()
+			filteredResults = filteredResults.filter(
+				service =>
+					service.name.toLowerCase().includes(searchLower) ||
+					service.description.toLowerCase().includes(searchLower)
+			)
+		}
+
+		setServices(filteredResults)
+		setLoading(false)
+	}
 
 	async function checkServicesTable() {
 		try {
 			console.log('Checking services table directly...')
-			const { data, error } = await supabase
-				.from('services')
-				.select('*, categories(name)')
-			
+			const { data, error } = await supabase.from('services').select('*, categories(name)')
+
 			if (error) {
 				console.error('Error querying services table:', error)
 				setError('Error querying services table: ' + error.message)
 				return
 			}
-			
+
 			console.log('Direct services table query result:', data)
 			console.log('Services count:', data?.length || 0)
-			
+
 			if (data && data.length > 0) {
 				const transformedData = data.map(item => ({
 					id: item.id,
@@ -88,15 +105,18 @@ export default function ServicesAdmin() {
 					description: item.description || '',
 					image_url: item.image_url,
 					category_id: item.category_id,
-					category_name: item.categories?.name || null
-				}));
-				
+					category_name: item.categories?.name || null,
+				}))
+
 				console.log('Transformed services data:', transformedData)
 				setServices(transformedData)
+				setAllServices(transformedData)
 				setLoading(false)
 				setSuccess('Found ' + transformedData.length + ' services in database')
 			} else {
-				setError('No services found in the database. Try adding some services using the "Add Service" button.')
+				setError(
+					'No services found in the database. Try adding some services using the "Add Service" button.'
+				)
 			}
 		} catch (error) {
 			console.error('Exception when checking services table:', error)
@@ -106,16 +126,13 @@ export default function ServicesAdmin() {
 
 	async function fetchCategories() {
 		try {
-			const { data, error } = await supabase
-				.from('categories')
-				.select('*')
-				.order('name')
-			
+			const { data, error } = await supabase.from('categories').select('*').order('name')
+
 			if (error) {
 				console.error('Error fetching categories:', error)
 				return
 			}
-			
+
 			console.log('Fetched categories:', data)
 			setCategories(data || [])
 		} catch (error) {
@@ -123,44 +140,29 @@ export default function ServicesAdmin() {
 		}
 	}
 
-	async function fetchServices() {
+	async function fetchAllServices() {
 		setLoading(true)
 		try {
-			console.log('Fetching services...')
-			
-			let query = supabase
-				.from('services')
-				.select('*, categories(name)')
-			
-			if (selectedCategoryId !== 'all') {
-				query = query.eq('category_id', selectedCategoryId)
-			}
+			console.log('Fetching all services...')
 
-			if (searchTerm) {
-				query = query.ilike('name', `%${searchTerm}%`)
-			}
+			const { data, error } = await supabase.from('services').select('*, categories(name)')
 
-			console.log('Fetching services with query:', {
-				selectedCategoryId,
-				searchTerm
-			})
-
-			const { data, error } = await query
-			
 			if (error) throw error
-			
+
 			console.log('Fetched services data:', data)
 			console.log('Services data length:', data?.length || 0)
-			
-			const transformedData = data?.map(item => ({
-				id: item.id,
-				name: item.name || '',
-				description: item.description || '',
-				image_url: item.image_url,
-				category_id: item.category_id,
-				category_name: item.categories?.name || null
-			})) || [];
-			
+
+			const transformedData =
+				data?.map(item => ({
+					id: item.id,
+					name: item.name || '',
+					description: item.description || '',
+					image_url: item.image_url,
+					category_id: item.category_id,
+					category_name: item.categories?.name || null,
+				})) || []
+
+			setAllServices(transformedData)
 			setServices(transformedData)
 		} catch (error) {
 			console.error('Error fetching services:', error)
@@ -176,7 +178,7 @@ export default function ServicesAdmin() {
 			name: '',
 			description: '',
 			image_url: '',
-			category_id: ''
+			category_id: '',
 		})
 		setOldImagePath(null)
 		setIsModalOpen(true)
@@ -190,19 +192,22 @@ export default function ServicesAdmin() {
 			name: service.name,
 			description: service.description,
 			image_url: service.image_url || '',
-			category_id: service.category_id ? String(service.category_id) : ''
+			category_id: service.category_id ? String(service.category_id) : '',
 		})
-		
+
 		console.log('Opening edit modal for service:', service)
 		console.log('Setting form data:', {
 			name: service.name,
 			description: service.description,
 			image_url: service.image_url || '',
-			category_id: service.category_id ? String(service.category_id) : ''
+			category_id: service.category_id ? String(service.category_id) : '',
 		})
-		
-		// Store old image path for possible deletion
-		if (service.image_url && typeof service.image_url === 'string' && service.image_url.includes('img/services/')) {
+
+		if (
+			service.image_url &&
+			typeof service.image_url === 'string' &&
+			service.image_url.includes('img/services/')
+		) {
 			try {
 				const urlParts = service.image_url.split('img/services/')
 				if (urlParts.length > 1) {
@@ -217,7 +222,7 @@ export default function ServicesAdmin() {
 		} else {
 			setOldImagePath(null)
 		}
-		
+
 		setIsModalOpen(true)
 		setError(null)
 		setSuccess(null)
@@ -248,17 +253,16 @@ export default function ServicesAdmin() {
 		try {
 			const file = e.target.files[0]
 			console.log('Uploading file:', file.name, 'size:', file.size)
-			
+
 			const fileName = `${Date.now()}-${file.name}`
 			const filePath = `services/${fileName}`
 
-			// Upload to existing bucket
 			console.log('Attempting to upload to path:', filePath)
 			const { data, error: uploadError } = await supabase.storage
 				.from('img')
 				.upload(filePath, file, {
 					cacheControl: '3600',
-					upsert: true
+					upsert: true,
 				})
 
 			if (uploadError) {
@@ -268,12 +272,8 @@ export default function ServicesAdmin() {
 
 			console.log('Upload success, data:', data)
 
-			// Get the public URL
-			const { data: urlData } = supabase.storage
-				.from('img')
-				.getPublicUrl(filePath)
+			const { data: urlData } = supabase.storage.from('img').getPublicUrl(filePath)
 
-			// Check if urlData exists before accessing publicUrl
 			const publicUrl = urlData?.publicUrl || ''
 			console.log('Generated public URL:', publicUrl)
 
@@ -306,6 +306,39 @@ export default function ServicesAdmin() {
 		}
 	}
 
+	async function handleDeleteImage() {
+		try {
+			setError(null)
+
+			if (!formData.image_url) return
+
+			if (formData.image_url.includes('img/services/')) {
+				const urlParts = formData.image_url.split('img/services/')
+				if (urlParts.length > 1) {
+					const imagePath = `services/${urlParts[1]}`
+
+					const { error } = await supabase.storage.from('img').remove([imagePath])
+
+					if (error) {
+						console.error('Error deleting image from storage:', error)
+						setError('Failed to delete image: ' + error.message)
+						return
+					}
+				}
+			}
+
+			setFormData({
+				...formData,
+				image_url: '',
+			})
+
+			setSuccess('Image deleted successfully')
+		} catch (error) {
+			console.error('Error deleting image:', error)
+			setError('Failed to delete image: ' + (error as Error).message)
+		}
+	}
+
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault()
 		setError(null)
@@ -321,19 +354,19 @@ export default function ServicesAdmin() {
 				name: formData.name.trim(),
 				description: formData.description.trim(),
 				image_url: formData.image_url || null,
-				category_id: formData.category_id ? parseInt(formData.category_id) : null
+				category_id: formData.category_id || null,
 			}
 
 			console.log('Saving service with data:', serviceData)
 
 			if (editingService) {
 				console.log('Updating existing service with ID:', editingService.id)
-				
-				const hasChanges = 
+
+				const hasChanges =
 					serviceData.name !== editingService.name ||
 					serviceData.description !== editingService.description ||
 					serviceData.image_url !== editingService.image_url ||
-					serviceData.category_id !== editingService.category_id;
+					serviceData.category_id !== editingService.category_id
 
 				if (!hasChanges) {
 					console.log('No changes detected, skipping update')
@@ -341,13 +374,12 @@ export default function ServicesAdmin() {
 					closeModal()
 					return
 				}
-				
+
 				if (oldImagePath && formData.image_url !== editingService.image_url) {
 					console.log('Image changed, deleting old image:', oldImagePath)
 					await deleteOldImage()
 				}
 
-				// Now update the service
 				const { data, error } = await supabase
 					.from('services')
 					.update(serviceData)
@@ -358,12 +390,14 @@ export default function ServicesAdmin() {
 					console.error('Error updating service:', error)
 					throw error
 				}
-				
+
 				console.log('Updated service result:', data)
 				setSuccess('Service updated successfully')
+
+				await fetchAllServices()
 			} else {
 				console.log('Inserting new service')
-				
+
 				const { data, error } = await supabase
 					.from('services')
 					.insert([serviceData])
@@ -373,12 +407,13 @@ export default function ServicesAdmin() {
 					console.error('Error inserting service:', error)
 					throw error
 				}
-				
+
 				console.log('Inserted service result:', data)
 				setSuccess('Service added successfully')
+
+				await fetchAllServices()
 			}
 
-			await fetchServices()
 			setIsModalOpen(false)
 		} catch (error) {
 			console.error('Error saving service:', error)
@@ -393,10 +428,12 @@ export default function ServicesAdmin() {
 
 		try {
 			const serviceToDelete = services.find(s => s.id === id)
-			
-			if (serviceToDelete?.image_url && 
-				typeof serviceToDelete.image_url === 'string' && 
-				serviceToDelete.image_url.includes('img/services/')) {
+
+			if (
+				serviceToDelete?.image_url &&
+				typeof serviceToDelete.image_url === 'string' &&
+				serviceToDelete.image_url.includes('img/services/')
+			) {
 				try {
 					const urlParts = serviceToDelete.image_url.split('img/services/')
 					if (urlParts.length > 1) {
@@ -412,7 +449,8 @@ export default function ServicesAdmin() {
 
 			if (error) throw error
 			setSuccess('Service deleted successfully')
-			await fetchServices()
+
+			await fetchAllServices()
 		} catch (error) {
 			console.error('Error deleting service:', error)
 			setError('Failed to delete service')
@@ -421,10 +459,10 @@ export default function ServicesAdmin() {
 
 	if (authLoading) {
 		return (
-			<div className="flex items-center justify-center min-h-screen">
-				<div className="text-center">
-					<div className="spinner animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-					<p className="mt-4 text-gray-600">Checking authentication...</p>
+			<div className='flex items-center justify-center min-h-screen'>
+				<div className='text-center'>
+					<div className='spinner animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto'></div>
+					<p className='mt-4 text-gray-600'>Checking authentication...</p>
 				</div>
 			</div>
 		)
@@ -435,27 +473,29 @@ export default function ServicesAdmin() {
 	}
 
 	return (
-		<div className="container mx-auto px-4">
-			<div className="flex flex-col md:flex-row justify-between items-center mb-6">
-				<h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-0">Services Management</h1>
-				<div className="flex flex-col sm:flex-row w-full md:w-auto gap-4">
-					<div className="relative">
+		<div className='container mx-auto px-4'>
+			<div className='flex flex-col md:flex-row justify-between items-center mb-6'>
+				<h1 className='text-2xl md:text-3xl font-bold mb-4 md:mb-0'>Services Management</h1>
+				<div className='flex flex-col sm:flex-row w-full md:w-auto gap-4'>
+					<div className='relative'>
 						<input
-							type="text"
-							placeholder="Search services..."
+							type='text'
+							placeholder='Search services...'
 							value={searchTerm}
-							onChange={(e) => setSearchTerm(e.target.value)}
-							className="pl-10 pr-4 py-2 border rounded-md w-full"
+							onChange={e => setSearchTerm(e.target.value)}
+							className='pl-10 pr-4 py-2 border rounded-md w-full'
 						/>
-						<FiSearch className="absolute left-3 top-3 text-gray-400" />
+						<FiSearch className='absolute left-3 top-3 text-gray-400' />
 					</div>
 					<select
 						value={selectedCategoryId === 'all' ? 'all' : selectedCategoryId}
-						onChange={(e) => setSelectedCategoryId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-						className="p-2 border rounded-md"
+						onChange={e =>
+							setSelectedCategoryId(e.target.value === 'all' ? 'all' : Number(e.target.value))
+						}
+						className='p-2 border rounded-md'
 					>
-						<option value="all">All Categories</option>
-						{categories.map((category) => (
+						<option value='all'>All Categories</option>
+						{categories.map(category => (
 							<option key={category.id} value={category.id}>
 								{category.name}
 							</option>
@@ -463,100 +503,102 @@ export default function ServicesAdmin() {
 					</select>
 					<button
 						onClick={openAddModal}
-						className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+						className='flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md'
 					>
-						<FiPlus className="mr-2" /> Add Service
+						<FiPlus className='mr-2' /> Add Service
 					</button>
 				</div>
 			</div>
 
 			{error && (
-				<div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+				<div className='bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4'>
 					{error}
 				</div>
 			)}
 
 			{success && (
-				<div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4">
+				<div className='bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4'>
 					{success}
 				</div>
 			)}
 
 			{loading ? (
-				<div className="flex justify-center py-8">
-					<div className="animate-pulse text-lg">Loading services...</div>
+				<div className='flex justify-center py-8'>
+					<div className='animate-pulse text-lg'>Loading services...</div>
 				</div>
 			) : services.length === 0 ? (
-				<div className="bg-white rounded-lg shadow p-6 text-center">
-					<p className="text-gray-600">No services found. Try a different search or category.</p>
+				<div className='bg-white rounded-lg shadow p-6 text-center'>
+					<p className='text-gray-600'>No services found. Try a different search or category.</p>
 					<button
 						onClick={() => checkServicesTable()}
-						className="mt-4 text-blue-600 hover:text-blue-800 underline"
+						className='mt-4 text-blue-600 hover:text-blue-800 underline'
 					>
 						Diagnose Table Issues
 					</button>
 				</div>
 			) : (
-				<div className="overflow-x-auto bg-white rounded-lg shadow">
-					<table className="min-w-full divide-y divide-gray-200">
-						<thead className="bg-gray-50">
+				<div className='overflow-x-auto bg-white rounded-lg shadow'>
+					<table className='min-w-full divide-y divide-gray-200'>
+						<thead className='bg-gray-50'>
 							<tr>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Image
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Title
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Description
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Category
 								</th>
-								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Actions
 								</th>
 							</tr>
 						</thead>
-						<tbody className="bg-white divide-y divide-gray-200">
-							{services.map((service) => (
+						<tbody className='bg-white divide-y divide-gray-200'>
+							{services.map(service => (
 								<tr key={service.id}>
-									<td className="px-6 py-4 whitespace-nowrap">
+									<td className='px-6 py-4 whitespace-nowrap'>
 										{service.image_url ? (
-											<div className="h-16 w-16 relative">
+											<div className='h-16 w-16 relative'>
 												<img
 													src={service.image_url}
 													alt={service.name}
-													className="h-16 w-16 object-cover rounded"
+													className='h-16 w-16 object-cover rounded'
 												/>
 											</div>
 										) : (
-											<div className="h-16 w-16 bg-gray-200 rounded flex items-center justify-center">
-												<FiImage className="text-gray-400" />
+											<div className='h-16 w-16 bg-gray-200 rounded flex items-center justify-center'>
+												<FiImage className='text-gray-400' />
 											</div>
 										)}
 									</td>
-									<td className="px-6 py-4">
-										<div className="text-sm font-medium text-gray-900">{service.name}</div>
+									<td className='px-6 py-4'>
+										<div className='text-sm font-medium text-gray-900'>{service.name}</div>
 									</td>
-									<td className="px-6 py-4">
-										<div className="text-sm text-gray-500 max-w-xs truncate">{service.description}</div>
+									<td className='px-6 py-4'>
+										<div className='text-sm text-gray-500 max-w-xs truncate'>
+											{service.description}
+										</div>
 									</td>
-									<td className="px-6 py-4">
-										<div className="text-sm text-gray-900">{service.category_name || 'None'}</div>
+									<td className='px-6 py-4'>
+										<div className='text-sm text-gray-900'>{service.category_name || 'None'}</div>
 									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+									<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
 										<button
 											onClick={() => openEditModal(service)}
-											className="text-blue-600 hover:text-blue-900 mr-3"
+											className='text-blue-600 hover:text-blue-900 mr-3'
 										>
-											<FiEdit2 className="inline mr-1" /> Edit
+											<FiEdit2 className='inline mr-1' /> Edit
 										</button>
 										<button
 											onClick={() => handleDelete(service.id)}
-											className="text-red-600 hover:text-red-900"
+											className='text-red-600 hover:text-red-900'
 										>
-											<FiTrash2 className="inline mr-1" /> Delete
+											<FiTrash2 className='inline mr-1' /> Delete
 										</button>
 									</td>
 								</tr>
@@ -567,130 +609,139 @@ export default function ServicesAdmin() {
 			)}
 
 			{isModalOpen && (
-				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-					<div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-						<div className="p-6">
-							<h2 className="text-xl font-bold mb-4">
+				<div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50'>
+					<div className='bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto'>
+						<div className='p-6'>
+							<h2 className='text-xl font-bold mb-4'>
 								{editingService ? 'Edit Service' : 'Add New Service'}
 							</h2>
-							
-							<form onSubmit={handleSubmit} className="space-y-4">
+
+							<form onSubmit={handleSubmit} className='space-y-4'>
 								<div>
-									<label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+									<label className='block text-gray-700 text-sm font-bold mb-2' htmlFor='name'>
 										Title *
 									</label>
 									<input
-										id="name"
-										name="name"
-										type="text"
+										id='name'
+										name='name'
+										type='text'
 										required
 										value={formData.name}
 										onChange={handleInputChange}
-										className="w-full p-2 border rounded"
+										className='w-full p-2 border rounded'
 									/>
 								</div>
-								
+
 								<div>
-									<label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
+									<label
+										className='block text-gray-700 text-sm font-bold mb-2'
+										htmlFor='description'
+									>
 										Description *
 									</label>
 									<textarea
-										id="description"
-										name="description"
+										id='description'
+										name='description'
 										required
 										value={formData.description}
 										onChange={handleInputChange}
 										rows={3}
-										className="w-full p-2 border rounded"
+										className='w-full p-2 border rounded'
 									/>
 								</div>
-								
+
 								<div>
-									<label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="category">
+									<label className='block text-gray-700 text-sm font-bold mb-2' htmlFor='category'>
 										Category
 									</label>
 									<select
-										id="category"
-										name="category_id"
+										id='category'
+										name='category_id'
 										value={formData.category_id}
 										onChange={handleInputChange}
-										className="w-full p-2 border rounded"
+										className='w-full p-2 border rounded'
 									>
-										<option value="">Select a category</option>
-										{categories.map((category) => (
+										<option value=''>Select a category</option>
+										{categories.map(category => (
 											<option key={category.id} value={category.id}>
 												{category.name}
 											</option>
 										))}
 									</select>
 								</div>
-								
+
 								<div>
-									<label className="block text-gray-700 text-sm font-bold mb-2">
-										Image
-									</label>
-									<div className="flex flex-col md:flex-row gap-4">
-										<div className="flex-1">
-											<div className="flex items-center justify-center px-3 py-3 border-2 border-dashed border-gray-300 rounded-md">
-												<div className="space-y-1 text-center">
-													<div className="flex text-sm text-gray-600">
+									<label className='block text-gray-700 text-sm font-bold mb-2'>Image</label>
+									<div className='flex flex-col md:flex-row gap-4'>
+										<div className='flex-1'>
+											<div className='flex items-center justify-center px-3 py-3 border-2 border-dashed border-gray-300 rounded-md'>
+												<div className='space-y-1 text-center'>
+													<div className='flex text-sm text-gray-600'>
 														<label
-															htmlFor="image-upload"
-															className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500"
+															htmlFor='image-upload'
+															className='relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500'
 														>
 															<span>Upload a file</span>
 															<input
-																id="image-upload"
-																name="image"
-																type="file"
-																className="sr-only"
-																accept="image/*"
+																id='image-upload'
+																name='image'
+																type='file'
+																className='sr-only'
+																accept='image/*'
 																onChange={handleImageUpload}
 																disabled={isUploading}
 															/>
 														</label>
-														<p className="pl-1">or drag and drop</p>
+														<p className='pl-1'>or drag and drop</p>
 													</div>
-													<p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+													<p className='text-xs text-gray-500'>PNG, JPG, GIF up to 10MB</p>
 												</div>
 											</div>
 											{isUploading && (
-												<div className="mt-2 flex items-center justify-center">
-													<div className="spinner animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
-													<span className="ml-2 text-sm text-gray-500">Uploading...</span>
+												<div className='mt-2 flex items-center justify-center'>
+													<div className='spinner animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500'></div>
+													<span className='ml-2 text-sm text-gray-500'>Uploading...</span>
 												</div>
 											)}
 										</div>
-										
-										<div className="w-full md:w-1/3">
+
+										<div className='w-full md:w-1/3'>
 											{formData.image_url ? (
-												<div className="relative h-40 w-full">
+												<div className='relative h-40 w-full'>
 													<img
 														src={formData.image_url}
-														alt="Preview"
-														className="h-full w-full object-contain border rounded"
+														alt='Preview'
+														className='h-full w-full object-contain border rounded'
 													/>
+													<button
+														type='button'
+														onClick={handleDeleteImage}
+														className='absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full'
+														title='Delete image'
+													>
+														<FiTrash2 size={16} />
+													</button>
 												</div>
 											) : (
-												<div className="h-40 w-full bg-gray-100 flex items-center justify-center border rounded">
-													<span className="text-gray-400">No image</span>
+												<div className='h-40 w-full bg-gray-100 flex items-center justify-center border rounded'>
+													<span className='text-gray-400'>No image</span>
 												</div>
 											)}
 										</div>
 									</div>
 								</div>
-								
-								<div className="flex justify-end gap-2 pt-4">
+
+								<div className='flex justify-end gap-2 pt-4'>
 									<button
-										type="button"
+										type='button'
 										onClick={closeModal}
-										className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+										className='bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded'
 									>
 										Cancel
 									</button>
 									<button
-										type="submit"
-										className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+										type='submit'
+										className='bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
 										disabled={isUploading}
 									>
 										{editingService ? 'Update Service' : 'Add Service'}
