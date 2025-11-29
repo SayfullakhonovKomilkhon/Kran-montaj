@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 export default function Hero() {
   return (
     <div className="relative bg-gray-900 mt-8">
@@ -14,18 +16,18 @@ export default function Hero() {
           15 лет опыта в разработке грузоподъемного оборудования
         </p>
         <div className="mt-10">
-          <a
+          <Link
             href="/services"
             className="inline-block bg-blue-600 py-3 px-8 border border-transparent rounded-md text-base font-medium text-white hover:bg-blue-700"
           >
             Наши услуги
-          </a>
-          <a
+          </Link>
+          <Link
             href="/contacts"
             className="inline-block ml-4 bg-white py-3 px-8 border border-transparent rounded-md text-base font-medium text-blue-600 hover:bg-gray-100"
           >
             Связаться с нами
-          </a>
+          </Link>
         </div>
       </div>
     </div>

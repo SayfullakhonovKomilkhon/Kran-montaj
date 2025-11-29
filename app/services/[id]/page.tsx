@@ -124,9 +124,10 @@ export default function CategoryPage() {
         
         console.log('Services for category:', servicesData);
         setServices(servicesData || []);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error:', err);
-        setError(err.message || 'Failed to load category');
+        const error = err as { message?: string }
+        setError(error.message || 'Failed to load category');
       } finally {
         setLoading(false);
       }

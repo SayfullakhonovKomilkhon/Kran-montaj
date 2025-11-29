@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSupabase } from '@/app/providers/supabase-provider';
 import {
-  FiHome, FiFileText, FiImage, FiList, FiLogOut,
+  FiFileText, FiImage, FiList, FiLogOut,
   FiSave, FiUpload, FiPlus, FiTrash2, FiEdit
 } from 'react-icons/fi';
 import { supabase } from '@/app/lib/supabase';
@@ -395,7 +395,7 @@ function ImageUploader() {
 
       // Upload to Supabase Storage
       const filename = `${Date.now()}-${imageFile.name}`;
-      const { data: fileData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('images')
         .upload(filename, imageFile);
 

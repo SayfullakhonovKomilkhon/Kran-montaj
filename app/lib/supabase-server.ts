@@ -1,8 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-export function createServerSupabaseClient() {
-  const cookieStore = cookies();
+export async function createServerSupabaseClient() {
+  const cookieStore = await cookies();
   
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rgpdolopvlfdiutwlvow.supabase.co',
@@ -13,19 +13,19 @@ export function createServerSupabaseClient() {
           const cookie = cookieStore.get(name);
           return cookie?.value;
         },
-        set(name, value, options) {
+        set(name, value) {
           try {
             // Next.js cookies() doesn't support directly setting cookies in middleware
             // This is normally used by Supabase Auth and should work on the client
             cookieStore.set(name, value);
-          } catch (error) {
+          } catch {
             // Ignore errors during static rendering or middleware
           }
         },
-        remove(name, options) {
+        remove(name) {
           try {
             cookieStore.delete(name);
-          } catch (error) {
+          } catch {
             // Ignore errors during static rendering or middleware
           }
         },

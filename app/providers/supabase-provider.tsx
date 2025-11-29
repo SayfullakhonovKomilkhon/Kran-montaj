@@ -1,26 +1,25 @@
 'use client'
 
-import { Session, User } from '@supabase/supabase-js'
+import { AuthError, Session, User } from '@supabase/supabase-js'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+
+interface SignInResult {
+	data?: { user: User; session: Session }
+	error?: AuthError | { message: string }
+}
+
+interface SignOutResult {
+	error: AuthError | { message: string } | null
+}
 
 interface SupabaseContextProps {
 	user: User | null
 	session: Session | null
 	isLoading: boolean
-	signIn: (email: string, password: string) => Promise<any>
-	signOut: () => Promise<any>
+	signIn: (email: string, password: string) => Promise<SignInResult>
+	signOut: () => Promise<SignOutResult>
 	supabase: typeof supabase
-}
-
-interface AdminUser {
-	id: string
-	login: string
-	password: string
-	full_name?: string
-	last_login?: string
-	created_at: string
-	updated_at: string
 }
 
 const SupabaseContext = createContext<SupabaseContextProps | undefined>(undefined)

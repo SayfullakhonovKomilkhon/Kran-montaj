@@ -54,11 +54,6 @@ function ServicesContent() {
 		setImgErrors(prev => ({ ...prev, [id]: true }))
 	}
 
-	// Function to convert name to slug
-	const getSlug = (name: string) => {
-		return name.toLowerCase().replaceAll(' ', '-')
-	}
-
 	// Fetch services and categories from Supabase
 	useEffect(() => {
 		async function fetchServicesAndCategories() {
@@ -124,13 +119,14 @@ function ServicesContent() {
 				} else {
 					setFilteredServices(data || [])
 				}
-			} catch (err: any) {
-				console.error('Error fetching services:', err)
-				if (err.message) {
-					setError(`Не удалось загрузить услуги: ${err.message}`)
-				} else {
-					setError('Не удалось загрузить услуги')
-				}
+		} catch (err: unknown) {
+			console.error('Error fetching services:', err)
+			const error = err as { message?: string }
+			if (error.message) {
+				setError(`Не удалось загрузить услуги: ${error.message}`)
+			} else {
+				setError('Не удалось загрузить услуги')
+			}
 			} finally {
 				setLoading(false)
 			}

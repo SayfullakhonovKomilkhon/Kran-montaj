@@ -4,7 +4,7 @@ import { supabase } from '@/app/lib/supabase'
 import { useSupabase } from '@/app/providers/supabase-provider'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { FiEdit2, FiPlus, FiSave, FiX, FiImage, FiTrash2 } from 'react-icons/fi'
+import { FiEdit2, FiPlus, FiSave, FiX, FiTrash2 } from 'react-icons/fi'
 
 interface PageContent {
   id: string
@@ -140,7 +140,7 @@ export default function PageContentAdmin() {
       const fileName = `${Date.now()}-${file.name}`
       const filePath = `page-content/${fileName}`
 
-      const { data, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('img')
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -255,7 +255,7 @@ export default function PageContentAdmin() {
     }
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('page_content')
         .insert([
           {
@@ -273,9 +273,10 @@ export default function PageContentAdmin() {
       await fetchPageContent()
       setSuccess('New content added successfully')
       setIsModalOpen(false)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding new content:', error)
-      if (error.message.includes('duplicate key value violates unique constraint')) {
+      const err = error as { message?: string }
+      if (err.message?.includes('duplicate key value violates unique constraint')) {
         setError('A content with this page and section already exists')
       } else {
         setError('Failed to add new content')

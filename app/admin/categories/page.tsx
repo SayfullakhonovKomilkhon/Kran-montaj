@@ -136,9 +136,10 @@ export default function CategoriesManagement() {
 			setFormData({
 				name: '',
 			})
-		} catch (error: any) {
+		} catch (error: unknown) {
 			console.error('Error adding category:', error)
-			if (error.code === '23505') {
+			const err = error as { code?: string }
+			if (err.code === '23505') {
 				setError('A category with this name already exists')
 			} else {
 				setError('Failed to add category')

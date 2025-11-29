@@ -7,11 +7,6 @@ import { Suspense, useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 
 // Define interfaces for catalog items
-interface Characteristic {
-	key: string
-	value: string
-}
-
 interface Product {
 	id: string
 	title: string

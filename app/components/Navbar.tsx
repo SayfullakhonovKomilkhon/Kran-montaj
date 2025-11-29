@@ -57,11 +57,6 @@ export default function Navbar() {
 		fetchCategories()
 	}, [])
 
-	// Function to convert name to slug
-	const getSlug = (name: string) => {
-		return name.toLowerCase().replaceAll(' ', '-')
-	}
-
 	return (
 		<div className='fixed top-0 left-0 right-0 z-50'>
 			{/* Top Bar */}

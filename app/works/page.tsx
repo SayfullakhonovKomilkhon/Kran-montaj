@@ -17,16 +17,23 @@ interface VideoFile {
 
 const SUPABASE_URL = 'https://rgpdolopvlfdiutwlvow.supabase.co';
 
+interface VideoData {
+  video_type: 'file' | 'url' | 'youtube';
+  youtube_id?: string;
+  video_url?: string;
+  filename?: string;
+}
+
 // Get video URL based on type
-function getVideoUrl(video: any): string {
+function getVideoUrl(video: VideoData): string {
   switch (video.video_type) {
     case 'youtube':
-      return `https://www.youtube.com/embed/${video.youtube_id}`;
+      return `https://www.youtube.com/embed/${video.youtube_id || ''}`;
     case 'url':
       return video.video_url || '';
     case 'file':
     default:
-      return `${SUPABASE_URL}/storage/v1/object/public/video/${encodeURIComponent(video.filename)}`;
+      return `${SUPABASE_URL}/storage/v1/object/public/video/${encodeURIComponent(video.filename || '')}`;
   }
 }
 
@@ -148,7 +155,7 @@ export default function WorksPage() {
         setLoading(true);
         
         // Try to get videos from database first (preferred method)
-        const { data: dbVideos, error: dbError } = await supabase
+        const { data: dbVideos } = await supabase
           .from('videos')
           .select('*')
           .eq('is_active', true)

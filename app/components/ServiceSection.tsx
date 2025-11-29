@@ -50,10 +50,11 @@ export default function ServiceSection() {
 
         console.log('Services data received for home page:', data);
         setServices(data || []);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error fetching services for home page:', err);
-        if (err.message) {
-          setError(`Не удалось загрузить услуги: ${err.message}`);
+        const error = err as { message?: string }
+        if (error.message) {
+          setError(`Не удалось загрузить услуги: ${error.message}`);
         } else {
           setError('Не удалось загрузить услуги');
         }

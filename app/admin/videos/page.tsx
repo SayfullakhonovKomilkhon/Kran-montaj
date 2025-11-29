@@ -93,8 +93,9 @@ export default function AdminVideosPage() {
 
       if (error) throw error;
       setVideos(data || []);
-    } catch (err: any) {
-      setError(err.message || 'Ошибка загрузки видео');
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Ошибка загрузки видео');
     } finally {
       setLoading(false);
     }
@@ -115,7 +116,7 @@ export default function AdminVideosPage() {
 
       if (uploadError) throw uploadError;
       return fileName;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Upload error:', err);
       throw err;
     }
@@ -128,7 +129,7 @@ export default function AdminVideosPage() {
       setSaving(true);
       setError(null);
 
-      let videoData: any = {
+      const videoData: Record<string, string | boolean | number | null> = {
         title: newVideo.title,
         description: newVideo.description,
         is_active: newVideo.is_active,
@@ -192,8 +193,9 @@ export default function AdminVideosPage() {
       fetchVideos();
       
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.message || 'Ошибка добавления');
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Ошибка добавления');
     } finally {
       setSaving(false);
       setUploading(false);
@@ -227,8 +229,9 @@ export default function AdminVideosPage() {
       fetchVideos();
       
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.message || 'Ошибка обновления');
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Ошибка обновления');
     } finally {
       setSaving(false);
     }
@@ -255,8 +258,9 @@ export default function AdminVideosPage() {
       fetchVideos();
       
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.message || 'Ошибка удаления');
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Ошибка удаления');
     }
   }
 
@@ -270,8 +274,9 @@ export default function AdminVideosPage() {
 
       if (error) throw error;
       fetchVideos();
-    } catch (err: any) {
-      setError(err.message || 'Ошибка');
+    } catch (err: unknown) {
+      const error = err as { message?: string }
+      setError(error.message || 'Ошибка');
     }
   }
 
@@ -293,7 +298,7 @@ export default function AdminVideosPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Управление видео</h1>
-          <p className="text-gray-600 mt-1">Добавляйте видео для страницы "Наши работы"</p>
+          <p className="text-gray-600 mt-1">Добавляйте видео для страницы &quot;Наши работы&quot;</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
@@ -648,7 +653,7 @@ export default function AdminVideosPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
           </svg>
           <p className="text-gray-500 text-lg">Видео пока нет</p>
-          <p className="text-gray-400 mt-1">Нажмите "Добавить видео" чтобы начать</p>
+          <p className="text-gray-400 mt-1">Нажмите &quot;Добавить видео&quot; чтобы начать</p>
         </div>
       ) : (
         <div className="space-y-3">

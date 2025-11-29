@@ -37,7 +37,6 @@ function LoadingFallback() {
 // Catalog item component with error handling
 function CatalogItem({ item }: { item: Product }) {
 	const [imageError, setImageError] = useState(false)
-	const [isHovered, setIsHovered] = useState(false)
 
 	const handleImageError = () => {
 		setImageError(true)
@@ -46,8 +45,6 @@ function CatalogItem({ item }: { item: Product }) {
 	return (
 		<div
 			className='group relative flex flex-col overflow-hidden h-[480px] perspective-1000'
-			onMouseEnter={() => setIsHovered(true)}
-			onMouseLeave={() => setIsHovered(false)}
 		>
 			{/* Card background with refined gradient border */}
 			<div className='absolute inset-0 bg-gradient-to-br from-amber-300/30 via-transparent to-amber-400/30 rounded-lg z-0 transform transition-all duration-700 group-hover:rotate-1 group-hover:scale-[1.03]'></div>

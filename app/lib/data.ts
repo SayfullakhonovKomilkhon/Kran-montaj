@@ -128,7 +128,7 @@ export async function getContacts(type?: string) {
 
 // Helper to check if Supabase connection is working
 export async function checkSupabaseConnection() {
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('general_content')
     .select('count(*)', { count: 'exact', head: true });
     

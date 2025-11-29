@@ -43,7 +43,7 @@ export default function CatalogSection() {
 
         console.log('Products data received for home page:', data);
         setProducts(data || []);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error fetching products:', err);
         setError('Failed to load products');
       } finally {

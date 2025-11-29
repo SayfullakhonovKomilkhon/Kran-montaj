@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { FiBox, FiFileText, FiHome, FiList, FiLogOut, FiPhone, FiSettings, FiPackage, FiLayout, FiVideo } from 'react-icons/fi'
+import { FiBox, FiHome, FiList, FiLogOut, FiPhone, FiSettings, FiVideo } from 'react-icons/fi'
 import { useSupabase } from '../providers/supabase-provider'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -3,23 +3,15 @@ import { supabase } from '@/app/lib/supabase';
 
 export async function POST() {
   try {
-    // Update users table to add full_name and last_login columns
-    const { error: usersTableError } = await supabase.from('_sql').rpc('alter_table_users');
+    // Test database connection by doing a simple query
+    const { error: testError } = await supabase
+      .from('users')
+      .select('id')
+      .limit(1);
     
-    if (usersTableError) {
-      console.error('SQL error:', usersTableError);
-      
-      // Alternative approach: try using SQL directly
-      const { error: directSqlError } = await supabase
-        .from('users')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', '00000000-0000-0000-0000-000000000000')
-        .select();
-      
-      if (directSqlError) {
-        console.error('Direct SQL error:', directSqlError);
-        throw directSqlError;
-      }
+    if (testError) {
+      console.error('Database connection test error:', testError);
+      // This is not critical, continue with the response
     }
     
     return NextResponse.json({ 
