@@ -196,6 +196,12 @@ export default function Navbar() {
 							>
 								Каталог
 							</NavLink>
+							<NavLink
+								href='/works'
+								active={pathname === '/works'}
+							>
+								Наши работы
+							</NavLink>
 							<NavLink href='/contacts' active={pathname === '/contacts'}>
 								Контакты
 							</NavLink>
@@ -290,6 +296,13 @@ export default function Navbar() {
 							onClick={() => setIsOpen(false)}
 						>
 							Каталог
+						</MobileNavLink>
+						<MobileNavLink
+							href='/works'
+							active={pathname === '/works'}
+							onClick={() => setIsOpen(false)}
+						>
+							Наши работы
 						</MobileNavLink>
 						<MobileNavLink
 							href='/contacts'

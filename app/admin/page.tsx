@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useSupabase } from '../providers/supabase-provider'
 import Link from 'next/link'
-import { FiBox, FiFileText, FiList, FiPackage, FiPhone, FiSettings, FiLayout } from 'react-icons/fi'
+import { FiBox, FiFileText, FiList, FiPackage, FiPhone, FiSettings, FiLayout, FiVideo } from 'react-icons/fi'
 
 interface ContentStats {
 	services: number
@@ -179,6 +179,12 @@ export default function AdminDashboard() {
 			description: 'Редактирование контактной информации',
 			icon: <FiPhone className="h-8 w-8 text-blue-500" />,
 			href: '/admin/contacts',
+		},
+		{
+			title: 'Видео',
+			description: 'Управление видео для страницы "Наши работы"',
+			icon: <FiVideo className="h-8 w-8 text-amber-500" />,
+			href: '/admin/videos',
 		},
 	]
 

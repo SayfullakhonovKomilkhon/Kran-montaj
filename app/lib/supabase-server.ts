@@ -5,8 +5,8 @@ export function createServerSupabaseClient() {
   const cookieStore = cookies();
   
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mcwxaxysuoslhspsnnfy.supabase.co',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jd3hheHlzdW9zbGhzcHNubmZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNDI1NTYsImV4cCI6MjA2MjYxODU1Nn0.a55WRVX8xbrR0m6sNBLRETMnd35cA-jjWNqXmc5W-wA',
+    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rgpdolopvlfdiutwlvow.supabase.co',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJncGRvbG9wdmxmZGl1dHdsdm93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzMzg2MzEsImV4cCI6MjA3OTkxNDYzMX0.aXW3FbtyBik86D22UOvKmMmywMa1RkpqOF360JmNzyE',
     {
       cookies: {
         get(name) {
