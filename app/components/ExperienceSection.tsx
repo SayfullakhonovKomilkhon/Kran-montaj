@@ -365,7 +365,7 @@ export default function ExperienceSection() {
                           src={client.image}
                           alt={client.name}
                           fill
-                          className="object-contain mx-auto grayscale hover:grayscale-0 transition-all duration-300"
+                          className="object-contain mx-auto transition-all duration-300 hover:scale-105"
                           onError={() => handleImageError(`client-${client.id}`)}
                           sizes="(max-width: 640px) 120px, (max-width: 768px) 130px, 140px"
                         />
@@ -387,7 +387,7 @@ export default function ExperienceSection() {
                           src={client.image}
                           alt={client.name}
                           fill
-                          className="object-contain mx-auto grayscale hover:grayscale-0 transition-all duration-300"
+                          className="object-contain mx-auto transition-all duration-300 hover:scale-105"
                           onError={() => handleImageError(`client-${client.id}`)}
                           sizes="(max-width: 640px) 120px, (max-width: 768px) 130px, 140px"
                         />

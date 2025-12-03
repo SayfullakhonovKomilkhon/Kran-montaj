@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { FiBox, FiHome, FiList, FiLogOut, FiPhone, FiSettings, FiVideo } from 'react-icons/fi'
+import { FiBox, FiFolder, FiHome, FiList, FiLogOut, FiPhone, FiSettings } from 'react-icons/fi'
 import { useSupabase } from '../providers/supabase-provider'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -66,7 +66,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 		{ path: '/admin/categories', label: 'Категории', icon: <FiList /> },
 		{ path: '/admin/services', label: 'Услуги', icon: <FiSettings /> },
 		{ path: '/admin/catalog', label: 'Каталог', icon: <FiBox /> },
-		{ path: '/admin/videos', label: 'Видео', icon: <FiVideo /> },
+		{ path: '/admin/videos', label: 'Наши проекты', icon: <FiFolder /> },
 		{ path: '/admin/contacts', label: 'Контакты', icon: <FiPhone /> },
 	]
 

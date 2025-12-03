@@ -21,19 +21,39 @@ interface Category {
 export default function Navbar() {
 	const [isOpen, setIsOpen] = useState(false)
 	const [scrolled, setScrolled] = useState(false)
+	const [visible, setVisible] = useState(false)
 	const pathname = usePathname()
 	const [categories, setCategories] = useState<Category[]>([])
 	const [dropdownOpen, setDropdownOpen] = useState(false)
+	
+	// Check if on home page
+	const isHomePage = pathname === '/'
 
 	// Handle scroll effect
 	useEffect(() => {
 		const handleScroll = () => {
-			setScrolled(window.scrollY > 10)
+			const scrollY = window.scrollY
+			setScrolled(scrollY > 10)
+			
+			// On home page: show navbar after scrolling 100px
+			// On other pages: always visible
+			if (isHomePage) {
+				setVisible(scrollY > 100)
+			} else {
+				setVisible(true)
+			}
+		}
+
+		// Initial check
+		if (!isHomePage) {
+			setVisible(true)
+		} else {
+			setVisible(window.scrollY > 100)
 		}
 
 		window.addEventListener('scroll', handleScroll)
 		return () => window.removeEventListener('scroll', handleScroll)
-	}, [])
+	}, [isHomePage])
 
 	// Fetch categories from Supabase
 	useEffect(() => {
@@ -58,7 +78,9 @@ export default function Navbar() {
 	}, [])
 
 	return (
-		<div className='fixed top-0 left-0 right-0 z-50'>
+		<div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${
+			visible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
+		}`}>
 			{/* Top Bar */}
 			<div
 				className={`w-full bg-gray-800 text-white text-sm transition-all duration-300 ${
@@ -258,34 +280,15 @@ export default function Navbar() {
 						>
 							О нас
 						</MobileNavLink>
-						<MobileNavLink
-							href='/services'
-							active={pathname === '/services'}
-							onClick={() => setIsOpen(false)}
-						>
-							Услуги
-						</MobileNavLink>
+					<MobileNavLink
+						href='/services'
+						active={pathname === '/services'}
+						onClick={() => setIsOpen(false)}
+					>
+						Услуги
+					</MobileNavLink>
 
-						{/* Mobile service categories */}
-						{categories.length > 0 && (
-							<div className='pl-4 space-y-1 border-l-2 border-yellow-600 ml-2'>
-								{categories.map((category, index) => (
-									<MobileNavLink
-										key={index}
-										href={`/services?category=${category.id}`}
-										active={pathname === `/services?category=${category.id}`}
-										onClick={() => setIsOpen(false)}
-									>
-										<div className='flex items-center'>
-											<span className='mr-1 text-yellow-800'>•</span>
-											{category.name}
-										</div>
-									</MobileNavLink>
-								))}
-							</div>
-						)}
-
-						<MobileNavLink
+					<MobileNavLink
 							href='/catalog'
 							active={pathname === '/catalog' || pathname.startsWith('/catalog/')}
 							onClick={() => setIsOpen(false)}
